@@ -6,11 +6,12 @@
 // callers - the wrapper just heap-copies the native handle and forwards
 // Equals/GetHashCode/ToString to the native operator==/hash()/toString().
 //
-// Phase A only needs the handle kinds actually returned/consumed by the
-// Phase A RTIambassador surface (handle lookups, federation join). The
-// remaining handle kinds (ObjectInstanceHandle, DimensionHandle,
+// Phase A only needed the handle kinds returned/consumed by the Phase A
+// RTIambassador surface (handle lookups, federation join). Phase B adds
+// ObjectInstanceHandle (registerObjectInstance/updateAttributeValues/
+// deleteObjectInstance). The remaining handle kinds (DimensionHandle,
 // MessageRetractionHandle, RegionHandle) are deferred to the phase that
-// first needs them (B/C/D) to keep this phase's surface honest.
+// first needs them (C/D/E) to keep this phase's surface honest.
 
 #include <RTI/Handle.h>
 
@@ -48,6 +49,7 @@ DEFINE_MANAGED_HANDLE(ManagedObjectClassHandle, ObjectClassHandle)
 DEFINE_MANAGED_HANDLE(ManagedInteractionClassHandle, InteractionClassHandle)
 DEFINE_MANAGED_HANDLE(ManagedAttributeHandle, AttributeHandle)
 DEFINE_MANAGED_HANDLE(ManagedParameterHandle, ParameterHandle)
+DEFINE_MANAGED_HANDLE(ManagedObjectInstanceHandle, ObjectInstanceHandle)
 
 #undef DEFINE_MANAGED_HANDLE
 

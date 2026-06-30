@@ -59,6 +59,7 @@ IMPLEMENT_MANAGED_HANDLE(ManagedObjectClassHandle, ObjectClassHandle)
 IMPLEMENT_MANAGED_HANDLE(ManagedInteractionClassHandle, InteractionClassHandle)
 IMPLEMENT_MANAGED_HANDLE(ManagedAttributeHandle, AttributeHandle)
 IMPLEMENT_MANAGED_HANDLE(ManagedParameterHandle, ParameterHandle)
+IMPLEMENT_MANAGED_HANDLE(ManagedObjectInstanceHandle, ObjectInstanceHandle)
 
 #undef IMPLEMENT_MANAGED_HANDLE
 

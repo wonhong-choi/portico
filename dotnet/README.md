@@ -36,13 +36,18 @@ machine before relying on it.
   Phase A subset of `ExampleCPPFederate::runFederate()`'s call sequence, for
   manual verification once built.
 
-## Scope: Phase A only
+## Scope: Phase A + B
 
 Connect/disconnect, create/destroy/join/resign federation execution,
-synchronization points, handle lookups, and `evoke(Multiple)Callbacks`.
-**Not yet implemented**: object/attribute pub-sub and updates (Phase B),
-interactions (Phase C), time management (Phase D), ownership/DDM/save-restore
-(Phase E). Calling anything outside Phase A means using
+synchronization points, handle lookups, and `evoke(Multiple)Callbacks`
+(Phase A), plus no-timestamp object pub/sub/register/update/delete -
+`PublishObjectClassAttributes`/`SubscribeObjectClassAttributes`,
+`RegisterObjectInstance`, `UpdateAttributeValues`, `DeleteObjectInstance`,
+and the matching `DiscoverObjectInstance`/`ReflectAttributeValues`/
+`RemoveObjectInstance` callbacks (Phase B). **Not yet implemented**:
+interactions (Phase C), time management - including the timestamped
+overloads of the Phase B methods (Phase D), ownership/DDM/save-restore
+(Phase E). Calling anything outside Phase A/B means using
 `NativeFederateAmbassadorBridge`'s inherited `NullFederateAmbassador` no-ops
 for any callback not listed above, and there is currently no managed
 surface on `ManagedRTIambassador` for those service areas at all.

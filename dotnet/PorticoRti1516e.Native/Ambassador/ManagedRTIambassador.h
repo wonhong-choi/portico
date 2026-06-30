@@ -1,13 +1,14 @@
 #pragma once
 
-// Managed entry point: 1:1 (Phase A subset) wrapper around the native
+// Managed entry point: 1:1 (Phase A/B subset) wrapper around the native
 // rti1516e::RTIambassador, grouped to match RTI/RTIambassador.h's own
 // section comments (IEEE 1516.1 clause numbers) for traceability. Phase A
 // covers the connect/federation-lifecycle + synchronization-point +
 // handle-lookup slice of the API exercised by
-// ExampleCPPFederate::runFederate() steps 1-6 and 12-15. Object/interaction
-// (Phase B/C) and time management (Phase D) methods are added to this
-// class in their own phases.
+// ExampleCPPFederate::runFederate() steps 1-6 and 12-15. Phase B adds the
+// no-timestamp object pub/sub/register/update/delete slice (steps 7-9/11).
+// Interactions (Phase C) and time management (Phase D) methods are added
+// to this class in their own phases.
 //
 // Lifetime: owns the native RTIambassador* (released from the
 // std::auto_ptr returned by RTIambassadorFactory) and the
@@ -69,6 +70,19 @@ public:
    ManagedAttributeHandle^ GetAttributeHandle(ManagedObjectClassHandle^ whichClass, String^ attributeName);
    ManagedInteractionClassHandle^ GetInteractionClassHandle(String^ name);
    ManagedParameterHandle^ GetParameterHandle(ManagedInteractionClassHandle^ whichClass, String^ parameterName);
+
+   // 5.2 / 5.6
+   void PublishObjectClassAttributes(ManagedObjectClassHandle^ objectClass, IEnumerable<ManagedAttributeHandle^>^ attributeList);
+   void SubscribeObjectClassAttributes(ManagedObjectClassHandle^ objectClass, IEnumerable<ManagedAttributeHandle^>^ attributeList);
+
+   // 6.8 / 6.10 / 6.14
+   ManagedObjectInstanceHandle^ RegisterObjectInstance(ManagedObjectClassHandle^ objectClass);
+   ManagedObjectInstanceHandle^ RegisterObjectInstance(ManagedObjectClassHandle^ objectClass, String^ objectInstanceName);
+   void UpdateAttributeValues(
+      ManagedObjectInstanceHandle^ objectInstance,
+      IDictionary<ManagedAttributeHandle^, array<Byte>^>^ attributeValues,
+      array<Byte>^ userSuppliedTag);
+   void DeleteObjectInstance(ManagedObjectInstanceHandle^ objectInstance, array<Byte>^ userSuppliedTag);
 
    // 10.41 - 10.44
    bool EvokeCallback(double approximateMinimumTimeInSeconds);

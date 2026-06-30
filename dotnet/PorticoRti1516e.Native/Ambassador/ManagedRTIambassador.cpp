@@ -36,15 +36,6 @@ namespace {
       }
    }
 
-   rti1516e::VariableLengthData ToNativeTag(array<Byte>^ tag)
-   {
-      if (tag == nullptr || tag->Length == 0)
-         return rti1516e::VariableLengthData();
-
-      pin_ptr<Byte> pinned = &tag[0];
-      return rti1516e::VariableLengthData((void*)pinned, (size_t)tag->Length);
-   }
-
    std::vector<std::wstring> ToNativeVector(IEnumerable<String^>^ strings)
    {
       std::vector<std::wstring> native;
@@ -224,7 +215,7 @@ void ManagedRTIambassador::RegisterFederationSynchronizationPoint(String^ label,
    EnsureConnected();
    try
    {
-      _native->registerFederationSynchronizationPoint(Marshal::ToNative(label), ToNativeTag(userSuppliedTag));
+      _native->registerFederationSynchronizationPoint(Marshal::ToNative(label), Marshal::ToNative(userSuppliedTag));
    }
    RTI_CATCH_AND_RETHROW
 }
@@ -236,7 +227,7 @@ void ManagedRTIambassador::RegisterFederationSynchronizationPoint(
    try
    {
       _native->registerFederationSynchronizationPoint(
-         Marshal::ToNative(label), ToNativeTag(userSuppliedTag), ToNativeFederateHandleSet(synchronizationSet));
+         Marshal::ToNative(label), Marshal::ToNative(userSuppliedTag), ToNativeFederateHandleSet(synchronizationSet));
    }
    RTI_CATCH_AND_RETHROW
 }
@@ -333,6 +324,89 @@ void ManagedRTIambassador::DisableCallbacks()
    try
    {
       _native->disableCallbacks();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::PublishObjectClassAttributes(ManagedObjectClassHandle^ objectClass, IEnumerable<ManagedAttributeHandle^>^ attributeList)
+{
+   EnsureConnected();
+   if (objectClass == nullptr)
+      throw gcnew ArgumentNullException("objectClass");
+
+   try
+   {
+      _native->publishObjectClassAttributes(objectClass->ToNative(), Marshal::ToNativeAttributeHandleSet(attributeList));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::SubscribeObjectClassAttributes(ManagedObjectClassHandle^ objectClass, IEnumerable<ManagedAttributeHandle^>^ attributeList)
+{
+   EnsureConnected();
+   if (objectClass == nullptr)
+      throw gcnew ArgumentNullException("objectClass");
+
+   try
+   {
+      _native->subscribeObjectClassAttributes(objectClass->ToNative(), Marshal::ToNativeAttributeHandleSet(attributeList));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+ManagedObjectInstanceHandle^ ManagedRTIambassador::RegisterObjectInstance(ManagedObjectClassHandle^ objectClass)
+{
+   EnsureConnected();
+   if (objectClass == nullptr)
+      throw gcnew ArgumentNullException("objectClass");
+
+   try
+   {
+      return gcnew ManagedObjectInstanceHandle(_native->registerObjectInstance(objectClass->ToNative()));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+ManagedObjectInstanceHandle^ ManagedRTIambassador::RegisterObjectInstance(ManagedObjectClassHandle^ objectClass, String^ objectInstanceName)
+{
+   EnsureConnected();
+   if (objectClass == nullptr)
+      throw gcnew ArgumentNullException("objectClass");
+
+   try
+   {
+      return gcnew ManagedObjectInstanceHandle(
+         _native->registerObjectInstance(objectClass->ToNative(), Marshal::ToNative(objectInstanceName)));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::UpdateAttributeValues(
+   ManagedObjectInstanceHandle^ objectInstance,
+   IDictionary<ManagedAttributeHandle^, array<Byte>^>^ attributeValues,
+   array<Byte>^ userSuppliedTag)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      _native->updateAttributeValues(
+         objectInstance->ToNative(), Marshal::ToNative(attributeValues), Marshal::ToNative(userSuppliedTag));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::DeleteObjectInstance(ManagedObjectInstanceHandle^ objectInstance, array<Byte>^ userSuppliedTag)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      _native->deleteObjectInstance(objectInstance->ToNative(), Marshal::ToNative(userSuppliedTag));
    }
    RTI_CATCH_AND_RETHROW
 }

@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using PorticoRti1516e;
 
 namespace PorticoRti1516e.Native.TestFederate
 {
-    // C# port of the Phase A subset of ExampleCPPFederate::runFederate() -
-    // steps 1-6 and 12-15 of the 15-step sequence in
+    // C# port of the Phase A+B subset of ExampleCPPFederate::runFederate() -
+    // steps 1-9 and 11-15 of the 15-step sequence in
     // codebase/src/cpp/ieee1516e/example/ExampleCPPFederate.cpp:
     //   1. create ambassador
     //   2. connect
@@ -13,8 +14,12 @@ namespace PorticoRti1516e.Native.TestFederate
     //   4. join federation execution
     //   5. resolve handles used by this test
     //   6. register + announce + achieve a synchronization point
-    //   (steps 7-11, object/interaction/time, are Phase B/C/D - out of
-    //   scope here)
+    //   7. publish/subscribe ObjectRoot.A's attributes (aa/ab/ac)
+    //   8. register an ObjectRoot.A instance
+    //   9. update its attribute values (no-timestamp)
+    //   (step 10, interactions, and the timestamped update in step 9 are
+    //   Phase C/D - out of scope here)
+    //   11. delete the object instance
     //   12. resign federation execution
     //   13. destroy federation execution
     //   14. disconnect
@@ -76,7 +81,34 @@ namespace PorticoRti1516e.Native.TestFederate
                     rtiAmb.EvokeMultipleCallbacks(0.1, 1.0);
                 }
 
-                Console.WriteLine("Synchronized. (Object/interaction/time steps are Phase B/C/D - skipped here.)");
+                Console.WriteLine("Synchronized. (Interaction/time steps are Phase C/D - skipped here.)");
+
+                Console.WriteLine("Resolving ObjectRoot.A handles...");
+                var objectClassHandle = rtiAmb.GetObjectClassHandle("ObjectRoot.A");
+                var aaHandle = rtiAmb.GetAttributeHandle(objectClassHandle, "aa");
+                var abHandle = rtiAmb.GetAttributeHandle(objectClassHandle, "ab");
+                var acHandle = rtiAmb.GetAttributeHandle(objectClassHandle, "ac");
+                var attributeHandles = new[] { aaHandle, abHandle, acHandle };
+
+                Console.WriteLine("Publishing and subscribing ObjectRoot.A attributes...");
+                rtiAmb.PublishObjectClassAttributes(objectClassHandle, attributeHandles);
+                rtiAmb.SubscribeObjectClassAttributes(objectClassHandle, attributeHandles);
+
+                Console.WriteLine("Registering an ObjectRoot.A instance...");
+                var objectInstanceHandle = rtiAmb.RegisterObjectInstance(objectClassHandle);
+                Console.WriteLine("Registered, object instance handle = " + objectInstanceHandle);
+
+                Console.WriteLine("Updating attribute values...");
+                var attributeValues = new Dictionary<ManagedAttributeHandle, byte[]>
+                {
+                    { aaHandle, Encoding.ASCII.GetBytes("aa:" + DateTime.UtcNow.Ticks) },
+                    { abHandle, Encoding.ASCII.GetBytes("ab:" + DateTime.UtcNow.Ticks) },
+                    { acHandle, Encoding.ASCII.GetBytes("ac:" + DateTime.UtcNow.Ticks) },
+                };
+                rtiAmb.UpdateAttributeValues(objectInstanceHandle, attributeValues, Encoding.ASCII.GetBytes("Hi!"));
+
+                Console.WriteLine("Deleting the object instance...");
+                rtiAmb.DeleteObjectInstance(objectInstanceHandle, null);
 
                 Console.WriteLine("Resigning federation execution...");
                 rtiAmb.ResignFederationExecution(ManagedResignAction.DeleteObjects);
@@ -132,6 +164,21 @@ namespace PorticoRti1516e.Native.TestFederate
         {
             Console.WriteLine("[callback] FederationSynchronized: " + label);
             _synchronized.Add(label);
+        }
+
+        public void DiscoverObjectInstance(ManagedObjectInstanceHandle objectInstance, ManagedObjectClassHandle objectClass, string objectInstanceName)
+        {
+            Console.WriteLine("[callback] DiscoverObjectInstance: " + objectInstanceName + " (" + objectInstance + ")");
+        }
+
+        public void ReflectAttributeValues(ManagedObjectInstanceHandle objectInstance, IDictionary<ManagedAttributeHandle, byte[]> attributeValues, byte[] userSuppliedTag)
+        {
+            Console.WriteLine("[callback] ReflectAttributeValues: " + objectInstance + " (" + attributeValues.Count + " attributes)");
+        }
+
+        public void RemoveObjectInstance(ManagedObjectInstanceHandle objectInstance, byte[] userSuppliedTag)
+        {
+            Console.WriteLine("[callback] RemoveObjectInstance: " + objectInstance);
         }
     }
 }

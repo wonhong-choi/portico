@@ -49,6 +49,31 @@ public:
       rti1516e::FederateHandleSet const & failedToSyncSet)
       throw (rti1516e::FederateInternalError) override;
 
+   // 6.9 (no-timestamp overload only)
+   virtual void discoverObjectInstance(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::ObjectClassHandle theObjectClass,
+      std::wstring const & theObjectInstanceName)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 6.11 (no-timestamp overload only)
+   virtual void reflectAttributeValues(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandleValueMap const & theAttributeValues,
+      rti1516e::VariableLengthData const & theUserSuppliedTag,
+      rti1516e::OrderType sentOrder,
+      rti1516e::TransportationType theType,
+      rti1516e::SupplementalReflectInfo theReflectInfo)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 6.15 (no-timestamp overload only)
+   virtual void removeObjectInstance(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::VariableLengthData const & theUserSuppliedTag,
+      rti1516e::OrderType sentOrder,
+      rti1516e::SupplementalRemoveInfo theRemoveInfo)
+      throw (rti1516e::FederateInternalError) override;
+
 private:
    gcroot<IManagedFederateAmbassador^> _managed;
 };

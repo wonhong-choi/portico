@@ -69,6 +69,17 @@ DEFINE_MANAGED_EXCEPTION(NameSetWasEmpty)
 DEFINE_MANAGED_EXCEPTION(InconsistentFDD)
 DEFINE_MANAGED_EXCEPTION(IllegalName)
 
+// Phase B additions - thrown by publish/subscribe/register/update/delete
+// object instance (RTI/RTIambassador.h clauses 5.2/5.6/6.8/6.10/6.14).
+DEFINE_MANAGED_EXCEPTION(ObjectClassNotDefined)
+DEFINE_MANAGED_EXCEPTION(InvalidUpdateRateDesignator)
+DEFINE_MANAGED_EXCEPTION(ObjectInstanceNameInUse)
+DEFINE_MANAGED_EXCEPTION(ObjectInstanceNameNotReserved)
+DEFINE_MANAGED_EXCEPTION(ObjectClassNotPublished)
+DEFINE_MANAGED_EXCEPTION(AttributeNotOwned)
+DEFINE_MANAGED_EXCEPTION(ObjectInstanceNotKnown)
+DEFINE_MANAGED_EXCEPTION(DeletePrivilegeNotHeld)
+
 #undef DEFINE_MANAGED_EXCEPTION
 
 }

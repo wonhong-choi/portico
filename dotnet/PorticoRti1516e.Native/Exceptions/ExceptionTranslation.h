@@ -7,7 +7,7 @@
 // falls back to the generic PorticoRtiException for anything else in the
 // ~122-type native hierarchy that doesn't have a dedicated subclass yet.
 //
-// Only Phase A's exception subset is listed here; later phases extend this
+// Only Phase A/B's exception subset is listed here; later phases extend this
 // list as they add managed subclasses for the exceptions their slice of
 // the API throws.
 
@@ -78,6 +78,22 @@
       { throw gcnew PorticoRti1516e::InconsistentFDD(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
    catch (rti1516e::IllegalName const & e)                                                      \
       { throw gcnew PorticoRti1516e::IllegalName(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::ObjectClassNotDefined const & e)                                            \
+      { throw gcnew PorticoRti1516e::ObjectClassNotDefined(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::InvalidUpdateRateDesignator const & e)                                      \
+      { throw gcnew PorticoRti1516e::InvalidUpdateRateDesignator(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::ObjectInstanceNameInUse const & e)                                          \
+      { throw gcnew PorticoRti1516e::ObjectInstanceNameInUse(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::ObjectInstanceNameNotReserved const & e)                                    \
+      { throw gcnew PorticoRti1516e::ObjectInstanceNameNotReserved(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::ObjectClassNotPublished const & e)                                          \
+      { throw gcnew PorticoRti1516e::ObjectClassNotPublished(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::AttributeNotOwned const & e)                                                \
+      { throw gcnew PorticoRti1516e::AttributeNotOwned(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::ObjectInstanceNotKnown const & e)                                           \
+      { throw gcnew PorticoRti1516e::ObjectInstanceNotKnown(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::DeletePrivilegeNotHeld const & e)                                           \
+      { throw gcnew PorticoRti1516e::DeletePrivilegeNotHeld(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
    catch (rti1516e::Exception const & e)                                                        \
       { throw gcnew PorticoRti1516e::PorticoRtiException("rti1516e::Exception", PorticoRti1516e::Marshal::ToManaged(e.what())); }
 
