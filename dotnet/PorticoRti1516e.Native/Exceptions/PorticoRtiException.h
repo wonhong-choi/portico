@@ -85,6 +85,21 @@ DEFINE_MANAGED_EXCEPTION(DeletePrivilegeNotHeld)
 DEFINE_MANAGED_EXCEPTION(FederateServiceInvocationsAreBeingReportedViaMOM)
 DEFINE_MANAGED_EXCEPTION(InteractionClassNotPublished)
 
+// Phase D additions - thrown by enable/disable time regulation/constrained,
+// timeAdvanceRequest, and the timestamped update/send/delete overloads
+// (RTI/RTIambassador.h clauses 8.2/8.4/8.5/8.7/8.8 and the LogicalTime
+// overloads of 6.10/6.14/6.13).
+DEFINE_MANAGED_EXCEPTION(InvalidLookahead)
+DEFINE_MANAGED_EXCEPTION(InTimeAdvancingState)
+DEFINE_MANAGED_EXCEPTION(RequestForTimeRegulationPending)
+DEFINE_MANAGED_EXCEPTION(TimeRegulationAlreadyEnabled)
+DEFINE_MANAGED_EXCEPTION(TimeRegulationIsNotEnabled)
+DEFINE_MANAGED_EXCEPTION(RequestForTimeConstrainedPending)
+DEFINE_MANAGED_EXCEPTION(TimeConstrainedAlreadyEnabled)
+DEFINE_MANAGED_EXCEPTION(TimeConstrainedIsNotEnabled)
+DEFINE_MANAGED_EXCEPTION(LogicalTimeAlreadyPassed)
+DEFINE_MANAGED_EXCEPTION(InvalidLogicalTime)
+
 #undef DEFINE_MANAGED_EXCEPTION
 
 }

@@ -56,7 +56,7 @@ public:
       std::wstring const & theObjectInstanceName)
       throw (rti1516e::FederateInternalError) override;
 
-   // 6.11 (no-timestamp overload only)
+   // 6.11 (no-timestamp overload)
    virtual void reflectAttributeValues(
       rti1516e::ObjectInstanceHandle theObject,
       rti1516e::AttributeHandleValueMap const & theAttributeValues,
@@ -66,7 +66,20 @@ public:
       rti1516e::SupplementalReflectInfo theReflectInfo)
       throw (rti1516e::FederateInternalError) override;
 
-   // 6.15 (no-timestamp overload only)
+   // 6.11 (timestamped overload, no retraction handle - that overload is
+   // Phase E)
+   virtual void reflectAttributeValues(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandleValueMap const & theAttributeValues,
+      rti1516e::VariableLengthData const & theUserSuppliedTag,
+      rti1516e::OrderType sentOrder,
+      rti1516e::TransportationType theType,
+      rti1516e::LogicalTime const & theTime,
+      rti1516e::OrderType receivedOrder,
+      rti1516e::SupplementalReflectInfo theReflectInfo)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 6.15 (no-timestamp overload)
    virtual void removeObjectInstance(
       rti1516e::ObjectInstanceHandle theObject,
       rti1516e::VariableLengthData const & theUserSuppliedTag,
@@ -74,7 +87,17 @@ public:
       rti1516e::SupplementalRemoveInfo theRemoveInfo)
       throw (rti1516e::FederateInternalError) override;
 
-   // 6.13 (no-timestamp overload only)
+   // 6.15 (timestamped overload, no retraction handle - Phase E for that one)
+   virtual void removeObjectInstance(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::VariableLengthData const & theUserSuppliedTag,
+      rti1516e::OrderType sentOrder,
+      rti1516e::LogicalTime const & theTime,
+      rti1516e::OrderType receivedOrder,
+      rti1516e::SupplementalRemoveInfo theRemoveInfo)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 6.13 (no-timestamp overload)
    virtual void receiveInteraction(
       rti1516e::InteractionClassHandle theInteraction,
       rti1516e::ParameterHandleValueMap const & theParameterValues,
@@ -82,6 +105,33 @@ public:
       rti1516e::OrderType sentOrder,
       rti1516e::TransportationType theType,
       rti1516e::SupplementalReceiveInfo theReceiveInfo)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 6.13 (timestamped overload, no retraction handle - Phase E for that one)
+   virtual void receiveInteraction(
+      rti1516e::InteractionClassHandle theInteraction,
+      rti1516e::ParameterHandleValueMap const & theParameterValues,
+      rti1516e::VariableLengthData const & theUserSuppliedTag,
+      rti1516e::OrderType sentOrder,
+      rti1516e::TransportationType theType,
+      rti1516e::LogicalTime const & theTime,
+      rti1516e::OrderType receivedOrder,
+      rti1516e::SupplementalReceiveInfo theReceiveInfo)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 8.3
+   virtual void timeRegulationEnabled(
+      rti1516e::LogicalTime const & theFederateTime)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 8.6
+   virtual void timeConstrainedEnabled(
+      rti1516e::LogicalTime const & theFederateTime)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 8.13
+   virtual void timeAdvanceGrant(
+      rti1516e::LogicalTime const & theTime)
       throw (rti1516e::FederateInternalError) override;
 
 private:

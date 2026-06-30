@@ -7,7 +7,7 @@
 // falls back to the generic PorticoRtiException for anything else in the
 // ~122-type native hierarchy that doesn't have a dedicated subclass yet.
 //
-// Only Phase A/B/C's exception subset is listed here; later phases extend
+// Only Phase A/B/C/D's exception subset is listed here; later phases extend
 // this list as they add managed subclasses for the exceptions their slice of
 // the API throws.
 
@@ -98,6 +98,26 @@
       { throw gcnew PorticoRti1516e::FederateServiceInvocationsAreBeingReportedViaMOM(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
    catch (rti1516e::InteractionClassNotPublished const & e)                                     \
       { throw gcnew PorticoRti1516e::InteractionClassNotPublished(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::InvalidLookahead const & e)                                                 \
+      { throw gcnew PorticoRti1516e::InvalidLookahead(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::InTimeAdvancingState const & e)                                             \
+      { throw gcnew PorticoRti1516e::InTimeAdvancingState(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::RequestForTimeRegulationPending const & e)                                  \
+      { throw gcnew PorticoRti1516e::RequestForTimeRegulationPending(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::TimeRegulationAlreadyEnabled const & e)                                     \
+      { throw gcnew PorticoRti1516e::TimeRegulationAlreadyEnabled(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::TimeRegulationIsNotEnabled const & e)                                       \
+      { throw gcnew PorticoRti1516e::TimeRegulationIsNotEnabled(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::RequestForTimeConstrainedPending const & e)                                 \
+      { throw gcnew PorticoRti1516e::RequestForTimeConstrainedPending(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::TimeConstrainedAlreadyEnabled const & e)                                    \
+      { throw gcnew PorticoRti1516e::TimeConstrainedAlreadyEnabled(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::TimeConstrainedIsNotEnabled const & e)                                      \
+      { throw gcnew PorticoRti1516e::TimeConstrainedIsNotEnabled(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::LogicalTimeAlreadyPassed const & e)                                         \
+      { throw gcnew PorticoRti1516e::LogicalTimeAlreadyPassed(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::InvalidLogicalTime const & e)                                               \
+      { throw gcnew PorticoRti1516e::InvalidLogicalTime(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
    catch (rti1516e::Exception const & e)                                                        \
       { throw gcnew PorticoRti1516e::PorticoRtiException("rti1516e::Exception", PorticoRti1516e::Marshal::ToManaged(e.what())); }
 

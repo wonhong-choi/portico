@@ -9,9 +9,10 @@
 // Phase A only needed the handle kinds returned/consumed by the Phase A
 // RTIambassador surface (handle lookups, federation join). Phase B adds
 // ObjectInstanceHandle (registerObjectInstance/updateAttributeValues/
-// deleteObjectInstance). The remaining handle kinds (DimensionHandle,
-// MessageRetractionHandle, RegionHandle) are deferred to the phase that
-// first needs them (C/D/E) to keep this phase's surface honest.
+// deleteObjectInstance). Phase D adds MessageRetractionHandle (returned by
+// the timestamped update/send/delete overloads). The remaining handle
+// kinds (DimensionHandle, RegionHandle) are deferred to the phase that
+// first needs them (E) to keep this phase's surface honest.
 
 #include <RTI/Handle.h>
 
@@ -50,6 +51,7 @@ DEFINE_MANAGED_HANDLE(ManagedInteractionClassHandle, InteractionClassHandle)
 DEFINE_MANAGED_HANDLE(ManagedAttributeHandle, AttributeHandle)
 DEFINE_MANAGED_HANDLE(ManagedParameterHandle, ParameterHandle)
 DEFINE_MANAGED_HANDLE(ManagedObjectInstanceHandle, ObjectInstanceHandle)
+DEFINE_MANAGED_HANDLE(ManagedMessageRetractionHandle, MessageRetractionHandle)
 
 #undef DEFINE_MANAGED_HANDLE
 

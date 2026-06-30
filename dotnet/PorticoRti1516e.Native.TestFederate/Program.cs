@@ -5,9 +5,8 @@ using PorticoRti1516e;
 
 namespace PorticoRti1516e.Native.TestFederate
 {
-    // C# port of the Phase A+B+C subset of ExampleCPPFederate::runFederate() -
-    // all 15 steps (with steps 9/10 limited to their no-timestamp overloads)
-    // of the 15-step sequence in
+    // C# port of the Phase A+B+C+D subset of ExampleCPPFederate::runFederate(),
+    // following the 15-step sequence in
     // codebase/src/cpp/ieee1516e/example/ExampleCPPFederate.cpp:
     //   1. create ambassador
     //   2. connect
@@ -15,13 +14,15 @@ namespace PorticoRti1516e.Native.TestFederate
     //   4. join federation execution
     //   5. resolve handles used by this test
     //   6. register + announce + achieve a synchronization point
-    //   7. publish/subscribe ObjectRoot.A's attributes (aa/ab/ac) and
+    //   7. enable time regulation/constrained (ExampleCPPFederate::enableTimePolicy())
+    //   8. publish/subscribe ObjectRoot.A's attributes (aa/ab/ac) and
     //      InteractionRoot.X (xa/xb)
-    //   8. register an ObjectRoot.A instance
-    //   9. update its attribute values (no-timestamp)
-    //   10. send an InteractionRoot.X interaction (no-timestamp)
-    //   (the timestamped overloads of steps 9/10 are Phase D - out of scope here)
-    //   11. delete the object instance
+    //   9. register an ObjectRoot.A instance
+    //   10. update its attribute values + send an InteractionRoot.X
+    //       interaction (timestamped overloads), then request a time advance
+    //       - mirrors one iteration of runFederate()'s 20-iteration loop
+    //   11. delete the object instance (no-timestamp - ExampleCPPFederate
+    //       never uses the timestamped delete overload either)
     //   12. resign federation execution
     //   13. destroy federation execution
     //   14. disconnect
@@ -83,7 +84,22 @@ namespace PorticoRti1516e.Native.TestFederate
                     rtiAmb.EvokeMultipleCallbacks(0.1, 1.0);
                 }
 
-                Console.WriteLine("Synchronized. (Time-managed steps are Phase D - skipped here.)");
+                Console.WriteLine("Synchronized.");
+
+                const double lookahead = 1.0; // matches ExampleCPPFederate's federateLookahead
+                Console.WriteLine("Enabling time regulation (lookahead=" + lookahead + ")...");
+                rtiAmb.EnableTimeRegulation(new ManagedHLAfloat64Interval(lookahead));
+                while (!fedAmb.IsRegulating)
+                {
+                    rtiAmb.EvokeMultipleCallbacks(0.1, 1.0);
+                }
+
+                Console.WriteLine("Enabling time constrained...");
+                rtiAmb.EnableTimeConstrained();
+                while (!fedAmb.IsConstrained)
+                {
+                    rtiAmb.EvokeMultipleCallbacks(0.1, 1.0);
+                }
 
                 Console.WriteLine("Resolving ObjectRoot.A and InteractionRoot.X handles...");
                 var objectClassHandle = rtiAmb.GetObjectClassHandle("ObjectRoot.A");
@@ -106,22 +122,35 @@ namespace PorticoRti1516e.Native.TestFederate
                 var objectInstanceHandle = rtiAmb.RegisterObjectInstance(objectClassHandle);
                 Console.WriteLine("Registered, object instance handle = " + objectInstanceHandle);
 
-                Console.WriteLine("Updating attribute values...");
+                double federateTime = 0.0;
+                var sendTime = new ManagedHLAfloat64Time(federateTime + lookahead);
+
+                Console.WriteLine("Updating attribute values (timestamped)...");
                 var attributeValues = new Dictionary<ManagedAttributeHandle, byte[]>
                 {
                     { aaHandle, Encoding.ASCII.GetBytes("aa:" + DateTime.UtcNow.Ticks) },
                     { abHandle, Encoding.ASCII.GetBytes("ab:" + DateTime.UtcNow.Ticks) },
                     { acHandle, Encoding.ASCII.GetBytes("ac:" + DateTime.UtcNow.Ticks) },
                 };
-                rtiAmb.UpdateAttributeValues(objectInstanceHandle, attributeValues, Encoding.ASCII.GetBytes("Hi!"));
+                rtiAmb.UpdateAttributeValues(objectInstanceHandle, attributeValues, Encoding.ASCII.GetBytes("Hi!"), sendTime);
 
-                Console.WriteLine("Sending an InteractionRoot.X interaction...");
+                Console.WriteLine("Sending an InteractionRoot.X interaction (timestamped)...");
                 var parameterValues = new Dictionary<ManagedParameterHandle, byte[]>
                 {
                     { xaHandle, Encoding.ASCII.GetBytes("xa:" + DateTime.UtcNow.Ticks) },
                     { xbHandle, Encoding.ASCII.GetBytes("xb:" + DateTime.UtcNow.Ticks) },
                 };
-                rtiAmb.SendInteraction(interactionClassHandle, parameterValues, Encoding.ASCII.GetBytes("Hi!"));
+                rtiAmb.SendInteraction(interactionClassHandle, parameterValues, Encoding.ASCII.GetBytes("Hi!"), sendTime);
+
+                federateTime += 1.0; // timestep, matches ExampleCPPFederate::advanceTime's caller
+                Console.WriteLine("Requesting time advance to " + federateTime + "...");
+                fedAmb.IsAdvancing = true;
+                rtiAmb.TimeAdvanceRequest(new ManagedHLAfloat64Time(federateTime));
+                while (fedAmb.IsAdvancing)
+                {
+                    rtiAmb.EvokeMultipleCallbacks(0.1, 1.0);
+                }
+                Console.WriteLine("Time advanced to " + fedAmb.FederateTime);
 
                 Console.WriteLine("Deleting the object instance...");
                 rtiAmb.DeleteObjectInstance(objectInstanceHandle, null);
@@ -154,6 +183,11 @@ namespace PorticoRti1516e.Native.TestFederate
 
         public bool IsAnnounced(string label) => _announced.Contains(label);
         public bool IsSynchronized(string label) => _synchronized.Contains(label);
+
+        public bool IsRegulating { get; private set; }
+        public bool IsConstrained { get; private set; }
+        public bool IsAdvancing { get; set; }
+        public double FederateTime { get; private set; }
 
         public void ConnectionLost(string faultDescription)
         {
@@ -192,14 +226,50 @@ namespace PorticoRti1516e.Native.TestFederate
             Console.WriteLine("[callback] ReflectAttributeValues: " + objectInstance + " (" + attributeValues.Count + " attributes)");
         }
 
+        public void ReflectAttributeValues(ManagedObjectInstanceHandle objectInstance, IDictionary<ManagedAttributeHandle, byte[]> attributeValues, byte[] userSuppliedTag, ManagedHLAfloat64Time time)
+        {
+            Console.WriteLine("[callback] ReflectAttributeValues (timestamped): " + objectInstance + " (" + attributeValues.Count + " attributes) @ " + time.Time);
+        }
+
         public void RemoveObjectInstance(ManagedObjectInstanceHandle objectInstance, byte[] userSuppliedTag)
         {
             Console.WriteLine("[callback] RemoveObjectInstance: " + objectInstance);
         }
 
+        public void RemoveObjectInstance(ManagedObjectInstanceHandle objectInstance, byte[] userSuppliedTag, ManagedHLAfloat64Time time)
+        {
+            Console.WriteLine("[callback] RemoveObjectInstance (timestamped): " + objectInstance + " @ " + time.Time);
+        }
+
         public void ReceiveInteraction(ManagedInteractionClassHandle interactionClass, IDictionary<ManagedParameterHandle, byte[]> parameterValues, byte[] userSuppliedTag)
         {
             Console.WriteLine("[callback] ReceiveInteraction: " + interactionClass + " (" + parameterValues.Count + " parameters)");
+        }
+
+        public void ReceiveInteraction(ManagedInteractionClassHandle interactionClass, IDictionary<ManagedParameterHandle, byte[]> parameterValues, byte[] userSuppliedTag, ManagedHLAfloat64Time time)
+        {
+            Console.WriteLine("[callback] ReceiveInteraction (timestamped): " + interactionClass + " (" + parameterValues.Count + " parameters) @ " + time.Time);
+        }
+
+        public void TimeRegulationEnabled(ManagedHLAfloat64Time federateTime)
+        {
+            Console.WriteLine("[callback] TimeRegulationEnabled: " + federateTime.Time);
+            IsRegulating = true;
+            FederateTime = federateTime.Time;
+        }
+
+        public void TimeConstrainedEnabled(ManagedHLAfloat64Time federateTime)
+        {
+            Console.WriteLine("[callback] TimeConstrainedEnabled: " + federateTime.Time);
+            IsConstrained = true;
+            FederateTime = federateTime.Time;
+        }
+
+        public void TimeAdvanceGrant(ManagedHLAfloat64Time time)
+        {
+            Console.WriteLine("[callback] TimeAdvanceGrant: " + time.Time);
+            IsAdvancing = false;
+            FederateTime = time.Time;
         }
     }
 }

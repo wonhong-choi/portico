@@ -98,6 +98,24 @@ void NativeFederateAmbassadorBridge::reflectAttributeValues(
       Marshal::ToManaged(theUserSuppliedTag));
 }
 
+void NativeFederateAmbassadorBridge::reflectAttributeValues(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandleValueMap const & theAttributeValues,
+   rti1516e::VariableLengthData const & theUserSuppliedTag,
+   rti1516e::OrderType sentOrder,
+   rti1516e::TransportationType theType,
+   rti1516e::LogicalTime const & theTime,
+   rti1516e::OrderType receivedOrder,
+   rti1516e::SupplementalReflectInfo theReflectInfo)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->ReflectAttributeValues(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      Marshal::ToManaged(theAttributeValues),
+      Marshal::ToManaged(theUserSuppliedTag),
+      gcnew ManagedHLAfloat64Time(theTime));
+}
+
 void NativeFederateAmbassadorBridge::removeObjectInstance(
    rti1516e::ObjectInstanceHandle theObject,
    rti1516e::VariableLengthData const & theUserSuppliedTag,
@@ -108,6 +126,21 @@ void NativeFederateAmbassadorBridge::removeObjectInstance(
    _managed->RemoveObjectInstance(
       gcnew ManagedObjectInstanceHandle(theObject),
       Marshal::ToManaged(theUserSuppliedTag));
+}
+
+void NativeFederateAmbassadorBridge::removeObjectInstance(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::VariableLengthData const & theUserSuppliedTag,
+   rti1516e::OrderType sentOrder,
+   rti1516e::LogicalTime const & theTime,
+   rti1516e::OrderType receivedOrder,
+   rti1516e::SupplementalRemoveInfo theRemoveInfo)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->RemoveObjectInstance(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      Marshal::ToManaged(theUserSuppliedTag),
+      gcnew ManagedHLAfloat64Time(theTime));
 }
 
 void NativeFederateAmbassadorBridge::receiveInteraction(
@@ -123,6 +156,42 @@ void NativeFederateAmbassadorBridge::receiveInteraction(
       gcnew ManagedInteractionClassHandle(theInteraction),
       Marshal::ToManaged(theParameterValues),
       Marshal::ToManaged(theUserSuppliedTag));
+}
+
+void NativeFederateAmbassadorBridge::receiveInteraction(
+   rti1516e::InteractionClassHandle theInteraction,
+   rti1516e::ParameterHandleValueMap const & theParameterValues,
+   rti1516e::VariableLengthData const & theUserSuppliedTag,
+   rti1516e::OrderType sentOrder,
+   rti1516e::TransportationType theType,
+   rti1516e::LogicalTime const & theTime,
+   rti1516e::OrderType receivedOrder,
+   rti1516e::SupplementalReceiveInfo theReceiveInfo)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->ReceiveInteraction(
+      gcnew ManagedInteractionClassHandle(theInteraction),
+      Marshal::ToManaged(theParameterValues),
+      Marshal::ToManaged(theUserSuppliedTag),
+      gcnew ManagedHLAfloat64Time(theTime));
+}
+
+void NativeFederateAmbassadorBridge::timeRegulationEnabled(rti1516e::LogicalTime const & theFederateTime)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->TimeRegulationEnabled(gcnew ManagedHLAfloat64Time(theFederateTime));
+}
+
+void NativeFederateAmbassadorBridge::timeConstrainedEnabled(rti1516e::LogicalTime const & theFederateTime)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->TimeConstrainedEnabled(gcnew ManagedHLAfloat64Time(theFederateTime));
+}
+
+void NativeFederateAmbassadorBridge::timeAdvanceGrant(rti1516e::LogicalTime const & theTime)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->TimeAdvanceGrant(gcnew ManagedHLAfloat64Time(theTime));
 }
 
 }

@@ -117,6 +117,8 @@
     <ClInclude Include="FederateAmbassador\IManagedFederateAmbassador.h" />
     <ClInclude Include="FederateAmbassador\NativeFederateAmbassadorBridge.h" />
     <ClInclude Include="Ambassador\ManagedRTIambassador.h" />
+    <ClInclude Include="Time\ManagedHLAfloat64Time.h" />
+    <ClInclude Include="Time\ManagedHLAfloat64Interval.h" />
   </ItemGroup>
 
   <ItemGroup>
@@ -126,6 +128,8 @@
     <ClCompile Include="Exceptions\PorticoRtiException.cpp" />
     <ClCompile Include="FederateAmbassador\NativeFederateAmbassadorBridge.cpp" />
     <ClCompile Include="Ambassador\ManagedRTIambassador.cpp" />
+    <ClCompile Include="Time\ManagedHLAfloat64Time.cpp" />
+    <ClCompile Include="Time\ManagedHLAfloat64Interval.cpp" />
   </ItemGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

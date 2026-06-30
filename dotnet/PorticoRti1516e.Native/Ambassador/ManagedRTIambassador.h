@@ -1,6 +1,6 @@
 #pragma once
 
-// Managed entry point: 1:1 (Phase A/B/C subset) wrapper around the native
+// Managed entry point: 1:1 (Phase A/B/C/D subset) wrapper around the native
 // rti1516e::RTIambassador, grouped to match RTI/RTIambassador.h's own
 // section comments (IEEE 1516.1 clause numbers) for traceability. Phase A
 // covers the connect/federation-lifecycle + synchronization-point +
@@ -8,8 +8,10 @@
 // ExampleCPPFederate::runFederate() steps 1-6 and 12-15. Phase B adds the
 // no-timestamp object pub/sub/register/update/delete slice (steps 7-9/11).
 // Phase C adds the no-timestamp interaction pub/sub/send slice (step 10).
-// Time management (Phase D) methods are added to this class in their own
-// phase.
+// Phase D adds time management (enable/disable time regulation/constrained,
+// timeAdvanceRequest) plus the timestamped overloads of
+// UpdateAttributeValues/SendInteraction/DeleteObjectInstance deferred from
+// B/C.
 //
 // Lifetime: owns the native RTIambassador* (released from the
 // std::auto_ptr returned by RTIambassadorFactory) and the
@@ -21,6 +23,8 @@
 
 #include "../Handles/ManagedHandles.h"
 #include "../FederateAmbassador/IManagedFederateAmbassador.h"
+#include "../Time/ManagedHLAfloat64Time.h"
+#include "../Time/ManagedHLAfloat64Interval.h"
 
 using namespace System;
 using namespace System::Collections::Generic;
@@ -83,7 +87,16 @@ public:
       ManagedObjectInstanceHandle^ objectInstance,
       IDictionary<ManagedAttributeHandle^, array<Byte>^>^ attributeValues,
       array<Byte>^ userSuppliedTag);
+   ManagedMessageRetractionHandle^ UpdateAttributeValues(
+      ManagedObjectInstanceHandle^ objectInstance,
+      IDictionary<ManagedAttributeHandle^, array<Byte>^>^ attributeValues,
+      array<Byte>^ userSuppliedTag,
+      ManagedHLAfloat64Time^ time);
    void DeleteObjectInstance(ManagedObjectInstanceHandle^ objectInstance, array<Byte>^ userSuppliedTag);
+   ManagedMessageRetractionHandle^ DeleteObjectInstance(
+      ManagedObjectInstanceHandle^ objectInstance,
+      array<Byte>^ userSuppliedTag,
+      ManagedHLAfloat64Time^ time);
 
    // 5.4 / 5.8 / 6.12
    void PublishInteractionClass(ManagedInteractionClassHandle^ interactionClass);
@@ -92,6 +105,18 @@ public:
       ManagedInteractionClassHandle^ interactionClass,
       IDictionary<ManagedParameterHandle^, array<Byte>^>^ parameterValues,
       array<Byte>^ userSuppliedTag);
+   ManagedMessageRetractionHandle^ SendInteraction(
+      ManagedInteractionClassHandle^ interactionClass,
+      IDictionary<ManagedParameterHandle^, array<Byte>^>^ parameterValues,
+      array<Byte>^ userSuppliedTag,
+      ManagedHLAfloat64Time^ time);
+
+   // 8.2 / 8.4 / 8.5 / 8.7 / 8.8
+   void EnableTimeRegulation(ManagedHLAfloat64Interval^ lookahead);
+   void DisableTimeRegulation();
+   void EnableTimeConstrained();
+   void DisableTimeConstrained();
+   void TimeAdvanceRequest(ManagedHLAfloat64Time^ time);
 
    // 10.41 - 10.44
    bool EvokeCallback(double approximateMinimumTimeInSeconds);

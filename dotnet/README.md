@@ -1,4 +1,4 @@
-# PorticoRti1516e.Native (C#/.NET bridge, Phase A + B + C)
+# PorticoRti1516e.Native (C#/.NET bridge, Phase A + B + C + D)
 
 A C++/CLI bridge over Portico's native IEEE-1516e C++ API
 (`codebase/src/cpp/ieee1516e/`), so C#/.NET code can drive a Portico
@@ -24,8 +24,11 @@ machine before relying on it.
 - `PorticoRti1516e.Native/` - the C++/CLI bridge (`/clr`, x64 only).
   - `Handles/` - managed wrappers for the opaque `*Handle` value types.
   - `Types/` - `wstring` <-> `String^` marshaling.
+  - `Time/` - `ManagedHLAfloat64Time`/`ManagedHLAfloat64Interval`, thin
+    `double`-backed wrappers around the only concrete `LogicalTime`/
+    `LogicalTimeInterval` implementation `ExampleCPPFederate.cpp` uses.
   - `Exceptions/` - `PorticoRtiException` base + concrete subclasses for the
-    native exceptions Phase A actually throws, plus the
+    native exceptions Phase A-D actually throw, plus the
     `RTI_CATCH_AND_RETHROW` macro used at every native call site.
   - `FederateAmbassador/` - `IManagedFederateAmbassador` (the interface a C#
     federate implements) and `NativeFederateAmbassadorBridge`, the native
@@ -36,7 +39,7 @@ machine before relying on it.
   Phase A subset of `ExampleCPPFederate::runFederate()`'s call sequence, for
   manual verification once built.
 
-## Scope: Phase A + B + C
+## Scope: Phase A + B + C + D
 
 Connect/disconnect, create/destroy/join/resign federation execution,
 synchronization points, handle lookups, and `evoke(Multiple)Callbacks`
@@ -46,13 +49,22 @@ synchronization points, handle lookups, and `evoke(Multiple)Callbacks`
 and the matching `DiscoverObjectInstance`/`ReflectAttributeValues`/
 `RemoveObjectInstance` callbacks (Phase B), plus no-timestamp interaction
 pub/sub/send - `PublishInteractionClass`/`SubscribeInteractionClass`/
-`SendInteraction`, and the matching `ReceiveInteraction` callback (Phase C).
-**Not yet implemented**: time management - including the timestamped
-overloads of the Phase B/C methods (Phase D), ownership/DDM/save-restore
-(Phase E). Calling anything outside Phase A/B/C means using
-`NativeFederateAmbassadorBridge`'s inherited `NullFederateAmbassador` no-ops
-for any callback not listed above, and there is currently no managed
-surface on `ManagedRTIambassador` for those service areas at all.
+`SendInteraction`, and the matching `ReceiveInteraction` callback (Phase C),
+plus time management - `EnableTimeRegulation`/`DisableTimeRegulation`,
+`EnableTimeConstrained`/`DisableTimeConstrained`, `TimeAdvanceRequest`, the
+timestamped overloads of `UpdateAttributeValues`/`SendInteraction`/
+`DeleteObjectInstance` (each returning a `ManagedMessageRetractionHandle`),
+and the matching `TimeRegulationEnabled`/`TimeConstrainedEnabled`/
+`TimeAdvanceGrant` callbacks plus the timestamped (no retraction handle)
+overloads of `ReflectAttributeValues`/`ReceiveInteraction`/
+`RemoveObjectInstance` (Phase D).
+**Not yet implemented**: ownership management, DDM/regions, save/restore,
+MOM, and the retraction-handle overloads of `ReflectAttributeValues`/
+`ReceiveInteraction`/`RemoveObjectInstance` (Phase E). Calling anything
+outside Phase A/B/C/D means using `NativeFederateAmbassadorBridge`'s
+inherited `NullFederateAmbassador` no-ops for any callback not listed
+above, and there is currently no managed surface on `ManagedRTIambassador`
+for those service areas at all.
 
 Only `CallbackModel::HLA_EVOKED` is supported - callbacks are delivered
 solely when `EvokeCallback`/`EvokeMultipleCallbacks` is called, so they

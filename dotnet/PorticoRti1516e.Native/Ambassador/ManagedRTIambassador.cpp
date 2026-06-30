@@ -411,6 +411,47 @@ void ManagedRTIambassador::DeleteObjectInstance(ManagedObjectInstanceHandle^ obj
    RTI_CATCH_AND_RETHROW
 }
 
+ManagedMessageRetractionHandle^ ManagedRTIambassador::UpdateAttributeValues(
+   ManagedObjectInstanceHandle^ objectInstance,
+   IDictionary<ManagedAttributeHandle^, array<Byte>^>^ attributeValues,
+   array<Byte>^ userSuppliedTag,
+   ManagedHLAfloat64Time^ time)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+   if (time == nullptr)
+      throw gcnew ArgumentNullException("time");
+
+   try
+   {
+      rti1516e::MessageRetractionHandle handle = _native->updateAttributeValues(
+         objectInstance->ToNative(), Marshal::ToNative(attributeValues), Marshal::ToNative(userSuppliedTag), time->ToNative());
+      return gcnew ManagedMessageRetractionHandle(handle);
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+ManagedMessageRetractionHandle^ ManagedRTIambassador::DeleteObjectInstance(
+   ManagedObjectInstanceHandle^ objectInstance,
+   array<Byte>^ userSuppliedTag,
+   ManagedHLAfloat64Time^ time)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+   if (time == nullptr)
+      throw gcnew ArgumentNullException("time");
+
+   try
+   {
+      rti1516e::MessageRetractionHandle handle = _native->deleteObjectInstance(
+         objectInstance->ToNative(), Marshal::ToNative(userSuppliedTag), time->ToNative());
+      return gcnew ManagedMessageRetractionHandle(handle);
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
 void ManagedRTIambassador::PublishInteractionClass(ManagedInteractionClassHandle^ interactionClass)
 {
    EnsureConnected();
@@ -450,6 +491,83 @@ void ManagedRTIambassador::SendInteraction(
    {
       _native->sendInteraction(
          interactionClass->ToNative(), Marshal::ToNative(parameterValues), Marshal::ToNative(userSuppliedTag));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+ManagedMessageRetractionHandle^ ManagedRTIambassador::SendInteraction(
+   ManagedInteractionClassHandle^ interactionClass,
+   IDictionary<ManagedParameterHandle^, array<Byte>^>^ parameterValues,
+   array<Byte>^ userSuppliedTag,
+   ManagedHLAfloat64Time^ time)
+{
+   EnsureConnected();
+   if (interactionClass == nullptr)
+      throw gcnew ArgumentNullException("interactionClass");
+   if (time == nullptr)
+      throw gcnew ArgumentNullException("time");
+
+   try
+   {
+      rti1516e::MessageRetractionHandle handle = _native->sendInteraction(
+         interactionClass->ToNative(), Marshal::ToNative(parameterValues), Marshal::ToNative(userSuppliedTag), time->ToNative());
+      return gcnew ManagedMessageRetractionHandle(handle);
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::EnableTimeRegulation(ManagedHLAfloat64Interval^ lookahead)
+{
+   EnsureConnected();
+   if (lookahead == nullptr)
+      throw gcnew ArgumentNullException("lookahead");
+
+   try
+   {
+      _native->enableTimeRegulation(lookahead->ToNative());
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::DisableTimeRegulation()
+{
+   EnsureConnected();
+   try
+   {
+      _native->disableTimeRegulation();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::EnableTimeConstrained()
+{
+   EnsureConnected();
+   try
+   {
+      _native->enableTimeConstrained();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::DisableTimeConstrained()
+{
+   EnsureConnected();
+   try
+   {
+      _native->disableTimeConstrained();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::TimeAdvanceRequest(ManagedHLAfloat64Time^ time)
+{
+   EnsureConnected();
+   if (time == nullptr)
+      throw gcnew ArgumentNullException("time");
+
+   try
+   {
+      _native->timeAdvanceRequest(time->ToNative());
    }
    RTI_CATCH_AND_RETHROW
 }
