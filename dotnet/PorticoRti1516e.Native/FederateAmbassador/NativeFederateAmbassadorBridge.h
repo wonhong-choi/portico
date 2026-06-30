@@ -66,8 +66,8 @@ public:
       rti1516e::SupplementalReflectInfo theReflectInfo)
       throw (rti1516e::FederateInternalError) override;
 
-   // 6.11 (timestamped overload, no retraction handle - that overload is
-   // Phase E)
+   // 6.11 (timestamped overload, no retraction handle - the retraction-handle
+   // overload is added below as Phase E1)
    virtual void reflectAttributeValues(
       rti1516e::ObjectInstanceHandle theObject,
       rti1516e::AttributeHandleValueMap const & theAttributeValues,
@@ -79,6 +79,20 @@ public:
       rti1516e::SupplementalReflectInfo theReflectInfo)
       throw (rti1516e::FederateInternalError) override;
 
+   // 6.11 (timestamped overload, with retraction handle - Phase E1, not
+   // exercised by ExampleCPPFederate)
+   virtual void reflectAttributeValues(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandleValueMap const & theAttributeValues,
+      rti1516e::VariableLengthData const & theUserSuppliedTag,
+      rti1516e::OrderType sentOrder,
+      rti1516e::TransportationType theType,
+      rti1516e::LogicalTime const & theTime,
+      rti1516e::OrderType receivedOrder,
+      rti1516e::MessageRetractionHandle theHandle,
+      rti1516e::SupplementalReflectInfo theReflectInfo)
+      throw (rti1516e::FederateInternalError) override;
+
    // 6.15 (no-timestamp overload)
    virtual void removeObjectInstance(
       rti1516e::ObjectInstanceHandle theObject,
@@ -87,13 +101,26 @@ public:
       rti1516e::SupplementalRemoveInfo theRemoveInfo)
       throw (rti1516e::FederateInternalError) override;
 
-   // 6.15 (timestamped overload, no retraction handle - Phase E for that one)
+   // 6.15 (timestamped overload, no retraction handle - the retraction-handle
+   // overload is added below as Phase E1)
    virtual void removeObjectInstance(
       rti1516e::ObjectInstanceHandle theObject,
       rti1516e::VariableLengthData const & theUserSuppliedTag,
       rti1516e::OrderType sentOrder,
       rti1516e::LogicalTime const & theTime,
       rti1516e::OrderType receivedOrder,
+      rti1516e::SupplementalRemoveInfo theRemoveInfo)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 6.15 (timestamped overload, with retraction handle - Phase E1, not
+   // exercised by ExampleCPPFederate)
+   virtual void removeObjectInstance(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::VariableLengthData const & theUserSuppliedTag,
+      rti1516e::OrderType sentOrder,
+      rti1516e::LogicalTime const & theTime,
+      rti1516e::OrderType receivedOrder,
+      rti1516e::MessageRetractionHandle theHandle,
       rti1516e::SupplementalRemoveInfo theRemoveInfo)
       throw (rti1516e::FederateInternalError) override;
 
@@ -107,7 +134,8 @@ public:
       rti1516e::SupplementalReceiveInfo theReceiveInfo)
       throw (rti1516e::FederateInternalError) override;
 
-   // 6.13 (timestamped overload, no retraction handle - Phase E for that one)
+   // 6.13 (timestamped overload, no retraction handle - the retraction-handle
+   // overload is added below as Phase E1)
    virtual void receiveInteraction(
       rti1516e::InteractionClassHandle theInteraction,
       rti1516e::ParameterHandleValueMap const & theParameterValues,
@@ -117,6 +145,76 @@ public:
       rti1516e::LogicalTime const & theTime,
       rti1516e::OrderType receivedOrder,
       rti1516e::SupplementalReceiveInfo theReceiveInfo)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 6.13 (timestamped overload, with retraction handle - Phase E1, not
+   // exercised by ExampleCPPFederate)
+   virtual void receiveInteraction(
+      rti1516e::InteractionClassHandle theInteraction,
+      rti1516e::ParameterHandleValueMap const & theParameterValues,
+      rti1516e::VariableLengthData const & theUserSuppliedTag,
+      rti1516e::OrderType sentOrder,
+      rti1516e::TransportationType theType,
+      rti1516e::LogicalTime const & theTime,
+      rti1516e::OrderType receivedOrder,
+      rti1516e::MessageRetractionHandle theHandle,
+      rti1516e::SupplementalReceiveInfo theReceiveInfo)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 7.4 - ownership management (Phase E1, not exercised by ExampleCPPFederate)
+   virtual void requestAttributeOwnershipAssumption(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandleSet const & offeredAttributes,
+      rti1516e::VariableLengthData const & theUserSuppliedTag)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 7.5
+   virtual void requestDivestitureConfirmation(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandleSet const & releasedAttributes)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 7.7
+   virtual void attributeOwnershipAcquisitionNotification(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandleSet const & securedAttributes,
+      rti1516e::VariableLengthData const & theUserSuppliedTag)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 7.10
+   virtual void attributeOwnershipUnavailable(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandleSet const & theAttributes)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 7.11
+   virtual void requestAttributeOwnershipRelease(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandleSet const & candidateAttributes,
+      rti1516e::VariableLengthData const & theUserSuppliedTag)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 7.16
+   virtual void confirmAttributeOwnershipAcquisitionCancellation(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandleSet const & theAttributes)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 7.18
+   virtual void informAttributeOwnership(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandle theAttribute,
+      rti1516e::FederateHandle theOwner)
+      throw (rti1516e::FederateInternalError) override;
+
+   virtual void attributeIsNotOwned(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandle theAttribute)
+      throw (rti1516e::FederateInternalError) override;
+
+   virtual void attributeIsOwnedByRTI(
+      rti1516e::ObjectInstanceHandle theObject,
+      rti1516e::AttributeHandle theAttribute)
       throw (rti1516e::FederateInternalError) override;
 
    // 8.3
@@ -132,6 +230,11 @@ public:
    // 8.13
    virtual void timeAdvanceGrant(
       rti1516e::LogicalTime const & theTime)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 8.22 (Phase E1, not exercised by ExampleCPPFederate)
+   virtual void requestRetraction(
+      rti1516e::MessageRetractionHandle theHandle)
       throw (rti1516e::FederateInternalError) override;
 
 private:

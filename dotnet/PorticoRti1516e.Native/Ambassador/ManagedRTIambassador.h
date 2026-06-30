@@ -11,7 +11,10 @@
 // Phase D adds time management (enable/disable time regulation/constrained,
 // timeAdvanceRequest) plus the timestamped overloads of
 // UpdateAttributeValues/SendInteraction/DeleteObjectInstance deferred from
-// B/C.
+// B/C. Phase E1 adds ownership management (clauses 7.2-7.19) and message
+// retraction (8.21) - none of it exercised by ExampleCPPFederate's
+// runFederate(), so it's unverified beyond signature matching against
+// RTIambassador.h.
 //
 // Lifetime: owns the native RTIambassador* (released from the
 // std::auto_ptr returned by RTIambassadorFactory) and the
@@ -123,6 +126,31 @@ public:
    bool EvokeMultipleCallbacks(double approximateMinimumTimeInSeconds, double approximateMaximumTimeInSeconds);
    void EnableCallbacks();
    void DisableCallbacks();
+
+   // 7.2 / 7.3 / 7.6 - ownership management (Phase E1, not exercised by ExampleCPPFederate)
+   void UnconditionalAttributeOwnershipDivestiture(ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes);
+   void NegotiatedAttributeOwnershipDivestiture(ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes, array<Byte>^ userSuppliedTag);
+   void ConfirmDivestiture(ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ confirmedAttributes, array<Byte>^ userSuppliedTag);
+
+   // 7.8 / 7.9
+   void AttributeOwnershipAcquisition(ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ desiredAttributes, array<Byte>^ userSuppliedTag);
+   void AttributeOwnershipAcquisitionIfAvailable(ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ desiredAttributes);
+
+   // 7.12 / 7.13
+   void AttributeOwnershipReleaseDenied(ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes);
+   // theDivestedAttributes is an RTI-filled OUT parameter on the native side; exposed here as a return value.
+   List<ManagedAttributeHandle^>^ AttributeOwnershipDivestitureIfWanted(ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes);
+
+   // 7.14 / 7.15
+   void CancelNegotiatedAttributeOwnershipDivestiture(ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes);
+   void CancelAttributeOwnershipAcquisition(ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes);
+
+   // 7.17 / 7.19
+   void QueryAttributeOwnership(ManagedObjectInstanceHandle^ objectInstance, ManagedAttributeHandle^ attribute);
+   bool IsAttributeOwnedByFederate(ManagedObjectInstanceHandle^ objectInstance, ManagedAttributeHandle^ attribute);
+
+   // 8.21
+   void Retract(ManagedMessageRetractionHandle^ retractionHandle);
 
 private:
    void EnsureConnected();

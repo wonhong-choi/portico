@@ -100,6 +100,21 @@ DEFINE_MANAGED_EXCEPTION(TimeConstrainedIsNotEnabled)
 DEFINE_MANAGED_EXCEPTION(LogicalTimeAlreadyPassed)
 DEFINE_MANAGED_EXCEPTION(InvalidLogicalTime)
 
+// Phase E1 additions - thrown by ownership management (RTI/RTIambassador.h
+// clauses 7.2/7.3/7.6/7.8/7.9/7.12/7.13/7.14/7.15/7.17/7.19) and the
+// message-retraction service (8.21, retract()). FederateOwnsAttributes,
+// ObjectClassNotPublished, and AttributeNotOwned were already added in
+// earlier phases.
+DEFINE_MANAGED_EXCEPTION(AttributeAlreadyBeingDivested)
+DEFINE_MANAGED_EXCEPTION(NoAcquisitionPending)
+DEFINE_MANAGED_EXCEPTION(AttributeDivestitureWasNotRequested)
+DEFINE_MANAGED_EXCEPTION(AttributeNotPublished)
+DEFINE_MANAGED_EXCEPTION(AttributeAlreadyBeingAcquired)
+DEFINE_MANAGED_EXCEPTION(AttributeAcquisitionWasNotRequested)
+DEFINE_MANAGED_EXCEPTION(AttributeAlreadyOwned)
+DEFINE_MANAGED_EXCEPTION(MessageCanNoLongerBeRetracted)
+DEFINE_MANAGED_EXCEPTION(InvalidMessageRetractionHandle)
+
 #undef DEFINE_MANAGED_EXCEPTION
 
 }

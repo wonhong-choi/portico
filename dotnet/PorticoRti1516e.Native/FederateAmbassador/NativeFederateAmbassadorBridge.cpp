@@ -116,6 +116,26 @@ void NativeFederateAmbassadorBridge::reflectAttributeValues(
       gcnew ManagedHLAfloat64Time(theTime));
 }
 
+void NativeFederateAmbassadorBridge::reflectAttributeValues(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandleValueMap const & theAttributeValues,
+   rti1516e::VariableLengthData const & theUserSuppliedTag,
+   rti1516e::OrderType sentOrder,
+   rti1516e::TransportationType theType,
+   rti1516e::LogicalTime const & theTime,
+   rti1516e::OrderType receivedOrder,
+   rti1516e::MessageRetractionHandle theHandle,
+   rti1516e::SupplementalReflectInfo theReflectInfo)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->ReflectAttributeValues(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      Marshal::ToManaged(theAttributeValues),
+      Marshal::ToManaged(theUserSuppliedTag),
+      gcnew ManagedHLAfloat64Time(theTime),
+      gcnew ManagedMessageRetractionHandle(theHandle));
+}
+
 void NativeFederateAmbassadorBridge::removeObjectInstance(
    rti1516e::ObjectInstanceHandle theObject,
    rti1516e::VariableLengthData const & theUserSuppliedTag,
@@ -141,6 +161,23 @@ void NativeFederateAmbassadorBridge::removeObjectInstance(
       gcnew ManagedObjectInstanceHandle(theObject),
       Marshal::ToManaged(theUserSuppliedTag),
       gcnew ManagedHLAfloat64Time(theTime));
+}
+
+void NativeFederateAmbassadorBridge::removeObjectInstance(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::VariableLengthData const & theUserSuppliedTag,
+   rti1516e::OrderType sentOrder,
+   rti1516e::LogicalTime const & theTime,
+   rti1516e::OrderType receivedOrder,
+   rti1516e::MessageRetractionHandle theHandle,
+   rti1516e::SupplementalRemoveInfo theRemoveInfo)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->RemoveObjectInstance(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      Marshal::ToManaged(theUserSuppliedTag),
+      gcnew ManagedHLAfloat64Time(theTime),
+      gcnew ManagedMessageRetractionHandle(theHandle));
 }
 
 void NativeFederateAmbassadorBridge::receiveInteraction(
@@ -174,6 +211,124 @@ void NativeFederateAmbassadorBridge::receiveInteraction(
       Marshal::ToManaged(theParameterValues),
       Marshal::ToManaged(theUserSuppliedTag),
       gcnew ManagedHLAfloat64Time(theTime));
+}
+
+void NativeFederateAmbassadorBridge::receiveInteraction(
+   rti1516e::InteractionClassHandle theInteraction,
+   rti1516e::ParameterHandleValueMap const & theParameterValues,
+   rti1516e::VariableLengthData const & theUserSuppliedTag,
+   rti1516e::OrderType sentOrder,
+   rti1516e::TransportationType theType,
+   rti1516e::LogicalTime const & theTime,
+   rti1516e::OrderType receivedOrder,
+   rti1516e::MessageRetractionHandle theHandle,
+   rti1516e::SupplementalReceiveInfo theReceiveInfo)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->ReceiveInteraction(
+      gcnew ManagedInteractionClassHandle(theInteraction),
+      Marshal::ToManaged(theParameterValues),
+      Marshal::ToManaged(theUserSuppliedTag),
+      gcnew ManagedHLAfloat64Time(theTime),
+      gcnew ManagedMessageRetractionHandle(theHandle));
+}
+
+void NativeFederateAmbassadorBridge::requestAttributeOwnershipAssumption(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandleSet const & offeredAttributes,
+   rti1516e::VariableLengthData const & theUserSuppliedTag)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->RequestAttributeOwnershipAssumption(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      Marshal::ToManagedAttributeHandleSet(offeredAttributes),
+      Marshal::ToManaged(theUserSuppliedTag));
+}
+
+void NativeFederateAmbassadorBridge::requestDivestitureConfirmation(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandleSet const & releasedAttributes)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->RequestDivestitureConfirmation(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      Marshal::ToManagedAttributeHandleSet(releasedAttributes));
+}
+
+void NativeFederateAmbassadorBridge::attributeOwnershipAcquisitionNotification(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandleSet const & securedAttributes,
+   rti1516e::VariableLengthData const & theUserSuppliedTag)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->AttributeOwnershipAcquisitionNotification(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      Marshal::ToManagedAttributeHandleSet(securedAttributes),
+      Marshal::ToManaged(theUserSuppliedTag));
+}
+
+void NativeFederateAmbassadorBridge::attributeOwnershipUnavailable(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandleSet const & theAttributes)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->AttributeOwnershipUnavailable(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      Marshal::ToManagedAttributeHandleSet(theAttributes));
+}
+
+void NativeFederateAmbassadorBridge::requestAttributeOwnershipRelease(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandleSet const & candidateAttributes,
+   rti1516e::VariableLengthData const & theUserSuppliedTag)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->RequestAttributeOwnershipRelease(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      Marshal::ToManagedAttributeHandleSet(candidateAttributes),
+      Marshal::ToManaged(theUserSuppliedTag));
+}
+
+void NativeFederateAmbassadorBridge::confirmAttributeOwnershipAcquisitionCancellation(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandleSet const & theAttributes)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->ConfirmAttributeOwnershipAcquisitionCancellation(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      Marshal::ToManagedAttributeHandleSet(theAttributes));
+}
+
+void NativeFederateAmbassadorBridge::informAttributeOwnership(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandle theAttribute,
+   rti1516e::FederateHandle theOwner)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->InformAttributeOwnership(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      gcnew ManagedAttributeHandle(theAttribute),
+      gcnew ManagedFederateHandle(theOwner));
+}
+
+void NativeFederateAmbassadorBridge::attributeIsNotOwned(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandle theAttribute)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->AttributeIsNotOwned(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      gcnew ManagedAttributeHandle(theAttribute));
+}
+
+void NativeFederateAmbassadorBridge::attributeIsOwnedByRTI(
+   rti1516e::ObjectInstanceHandle theObject,
+   rti1516e::AttributeHandle theAttribute)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->AttributeIsOwnedByRTI(
+      gcnew ManagedObjectInstanceHandle(theObject),
+      gcnew ManagedAttributeHandle(theAttribute));
 }
 
 void NativeFederateAmbassadorBridge::timeRegulationEnabled(rti1516e::LogicalTime const & theFederateTime)
@@ -192,6 +347,12 @@ void NativeFederateAmbassadorBridge::timeAdvanceGrant(rti1516e::LogicalTime cons
    throw (rti1516e::FederateInternalError)
 {
    _managed->TimeAdvanceGrant(gcnew ManagedHLAfloat64Time(theTime));
+}
+
+void NativeFederateAmbassadorBridge::requestRetraction(rti1516e::MessageRetractionHandle theHandle)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->RequestRetraction(gcnew ManagedMessageRetractionHandle(theHandle));
 }
 
 }

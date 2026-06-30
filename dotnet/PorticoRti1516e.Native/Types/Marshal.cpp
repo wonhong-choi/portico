@@ -49,6 +49,16 @@ rti1516e::AttributeHandleSet ToNativeAttributeHandleSet(IEnumerable<ManagedAttri
    return native;
 }
 
+List<ManagedAttributeHandle^>^ ToManagedAttributeHandleSet(rti1516e::AttributeHandleSet const & native)
+{
+   List<ManagedAttributeHandle^>^ managed = gcnew List<ManagedAttributeHandle^>();
+   for (rti1516e::AttributeHandleSet::const_iterator it = native.begin(); it != native.end(); ++it)
+   {
+      managed->Add(gcnew ManagedAttributeHandle(*it));
+   }
+   return managed;
+}
+
 rti1516e::AttributeHandleValueMap ToNative(IDictionary<ManagedAttributeHandle^, array<Byte>^>^ managed)
 {
    rti1516e::AttributeHandleValueMap native;

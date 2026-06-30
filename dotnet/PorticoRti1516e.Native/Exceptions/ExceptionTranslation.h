@@ -7,7 +7,7 @@
 // falls back to the generic PorticoRtiException for anything else in the
 // ~122-type native hierarchy that doesn't have a dedicated subclass yet.
 //
-// Only Phase A/B/C/D's exception subset is listed here; later phases extend
+// Only Phase A/B/C/D/E1's exception subset is listed here; later phases extend
 // this list as they add managed subclasses for the exceptions their slice of
 // the API throws.
 
@@ -118,6 +118,24 @@
       { throw gcnew PorticoRti1516e::LogicalTimeAlreadyPassed(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
    catch (rti1516e::InvalidLogicalTime const & e)                                               \
       { throw gcnew PorticoRti1516e::InvalidLogicalTime(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::AttributeAlreadyBeingDivested const & e)                                    \
+      { throw gcnew PorticoRti1516e::AttributeAlreadyBeingDivested(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::NoAcquisitionPending const & e)                                             \
+      { throw gcnew PorticoRti1516e::NoAcquisitionPending(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::AttributeDivestitureWasNotRequested const & e)                              \
+      { throw gcnew PorticoRti1516e::AttributeDivestitureWasNotRequested(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::AttributeNotPublished const & e)                                            \
+      { throw gcnew PorticoRti1516e::AttributeNotPublished(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::AttributeAlreadyBeingAcquired const & e)                                    \
+      { throw gcnew PorticoRti1516e::AttributeAlreadyBeingAcquired(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::AttributeAcquisitionWasNotRequested const & e)                              \
+      { throw gcnew PorticoRti1516e::AttributeAcquisitionWasNotRequested(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::AttributeAlreadyOwned const & e)                                            \
+      { throw gcnew PorticoRti1516e::AttributeAlreadyOwned(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::MessageCanNoLongerBeRetracted const & e)                                    \
+      { throw gcnew PorticoRti1516e::MessageCanNoLongerBeRetracted(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::InvalidMessageRetractionHandle const & e)                                   \
+      { throw gcnew PorticoRti1516e::InvalidMessageRetractionHandle(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
    catch (rti1516e::Exception const & e)                                                        \
       { throw gcnew PorticoRti1516e::PorticoRtiException("rti1516e::Exception", PorticoRti1516e::Marshal::ToManaged(e.what())); }
 

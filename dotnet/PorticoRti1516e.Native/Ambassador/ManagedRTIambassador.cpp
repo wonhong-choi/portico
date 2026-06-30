@@ -572,4 +572,179 @@ void ManagedRTIambassador::TimeAdvanceRequest(ManagedHLAfloat64Time^ time)
    RTI_CATCH_AND_RETHROW
 }
 
+void ManagedRTIambassador::UnconditionalAttributeOwnershipDivestiture(
+   ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      _native->unconditionalAttributeOwnershipDivestiture(objectInstance->ToNative(), Marshal::ToNativeAttributeHandleSet(attributes));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::NegotiatedAttributeOwnershipDivestiture(
+   ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes, array<Byte>^ userSuppliedTag)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      _native->negotiatedAttributeOwnershipDivestiture(
+         objectInstance->ToNative(), Marshal::ToNativeAttributeHandleSet(attributes), Marshal::ToNative(userSuppliedTag));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::ConfirmDivestiture(
+   ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ confirmedAttributes, array<Byte>^ userSuppliedTag)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      _native->confirmDivestiture(
+         objectInstance->ToNative(), Marshal::ToNativeAttributeHandleSet(confirmedAttributes), Marshal::ToNative(userSuppliedTag));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::AttributeOwnershipAcquisition(
+   ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ desiredAttributes, array<Byte>^ userSuppliedTag)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      _native->attributeOwnershipAcquisition(
+         objectInstance->ToNative(), Marshal::ToNativeAttributeHandleSet(desiredAttributes), Marshal::ToNative(userSuppliedTag));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::AttributeOwnershipAcquisitionIfAvailable(
+   ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ desiredAttributes)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      _native->attributeOwnershipAcquisitionIfAvailable(objectInstance->ToNative(), Marshal::ToNativeAttributeHandleSet(desiredAttributes));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::AttributeOwnershipReleaseDenied(
+   ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      _native->attributeOwnershipReleaseDenied(objectInstance->ToNative(), Marshal::ToNativeAttributeHandleSet(attributes));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+List<ManagedAttributeHandle^>^ ManagedRTIambassador::AttributeOwnershipDivestitureIfWanted(
+   ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      rti1516e::AttributeHandleSet divested;
+      _native->attributeOwnershipDivestitureIfWanted(
+         objectInstance->ToNative(), Marshal::ToNativeAttributeHandleSet(attributes), divested);
+      return Marshal::ToManagedAttributeHandleSet(divested);
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::CancelNegotiatedAttributeOwnershipDivestiture(
+   ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      _native->cancelNegotiatedAttributeOwnershipDivestiture(objectInstance->ToNative(), Marshal::ToNativeAttributeHandleSet(attributes));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::CancelAttributeOwnershipAcquisition(
+   ManagedObjectInstanceHandle^ objectInstance, IEnumerable<ManagedAttributeHandle^>^ attributes)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+
+   try
+   {
+      _native->cancelAttributeOwnershipAcquisition(objectInstance->ToNative(), Marshal::ToNativeAttributeHandleSet(attributes));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::QueryAttributeOwnership(ManagedObjectInstanceHandle^ objectInstance, ManagedAttributeHandle^ attribute)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+   if (attribute == nullptr)
+      throw gcnew ArgumentNullException("attribute");
+
+   try
+   {
+      _native->queryAttributeOwnership(objectInstance->ToNative(), attribute->ToNative());
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+bool ManagedRTIambassador::IsAttributeOwnedByFederate(ManagedObjectInstanceHandle^ objectInstance, ManagedAttributeHandle^ attribute)
+{
+   EnsureConnected();
+   if (objectInstance == nullptr)
+      throw gcnew ArgumentNullException("objectInstance");
+   if (attribute == nullptr)
+      throw gcnew ArgumentNullException("attribute");
+
+   try
+   {
+      return _native->isAttributeOwnedByFederate(objectInstance->ToNative(), attribute->ToNative());
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::Retract(ManagedMessageRetractionHandle^ retractionHandle)
+{
+   EnsureConnected();
+   if (retractionHandle == nullptr)
+      throw gcnew ArgumentNullException("retractionHandle");
+
+   try
+   {
+      _native->retract(retractionHandle->ToNative());
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
 }
