@@ -1,0 +1,67 @@
+# PorticoRti1516e.Native (C#/.NET bridge, Phase A)
+
+A C++/CLI bridge over Portico's native IEEE-1516e C++ API
+(`codebase/src/cpp/ieee1516e/`), so C#/.NET code can drive a Portico
+federate without hand-writing P/Invoke against the STL/exception-heavy
+native API.
+
+This is a **standalone Visual Studio solution, independent of the Ant
+build under `codebase/`**. `PorticoRti1516e.Native` references a pre-built
+Portico Windows distribution's headers/libs directly; C# projects consume
+it via a normal project/assembly reference to `PorticoRti1516e.Native` -
+nothing here changes or depends on the Ant pipeline.
+
+Windows-only (C++/CLI requires `/clr`, and Portico's C++ binding only ships
+prebuilt libraries for vc14_3/VS2022 on Windows). **This code has not been
+built or run** - there is no Windows/MSVC/Portico-distribution toolchain
+available in the environment it was written in. Treat it as a careful,
+header-verified first draft; build and exercise it on a real Windows + VS2022
+machine before relying on it.
+
+## Layout
+
+- `PorticoRti1516e.sln`
+- `PorticoRti1516e.Native/` - the C++/CLI bridge (`/clr`, x64 only).
+  - `Handles/` - managed wrappers for the opaque `*Handle` value types.
+  - `Types/` - `wstring` <-> `String^` marshaling.
+  - `Exceptions/` - `PorticoRtiException` base + concrete subclasses for the
+    native exceptions Phase A actually throws, plus the
+    `RTI_CATCH_AND_RETHROW` macro used at every native call site.
+  - `FederateAmbassador/` - `IManagedFederateAmbassador` (the interface a C#
+    federate implements) and `NativeFederateAmbassadorBridge`, the native
+    `NullFederateAmbassador` subclass that forwards callbacks into it via
+    `gcroot`.
+  - `Ambassador/ManagedRTIambassador` - the main entry point.
+- `PorticoRti1516e.Native.TestFederate/` - a C# console app mirroring the
+  Phase A subset of `ExampleCPPFederate::runFederate()`'s call sequence, for
+  manual verification once built.
+
+## Scope: Phase A only
+
+Connect/disconnect, create/destroy/join/resign federation execution,
+synchronization points, handle lookups, and `evoke(Multiple)Callbacks`.
+**Not yet implemented**: object/attribute pub-sub and updates (Phase B),
+interactions (Phase C), time management (Phase D), ownership/DDM/save-restore
+(Phase E). Calling anything outside Phase A means using
+`NativeFederateAmbassadorBridge`'s inherited `NullFederateAmbassador` no-ops
+for any callback not listed above, and there is currently no managed
+surface on `ManagedRTIambassador` for those service areas at all.
+
+Only `CallbackModel::HLA_EVOKED` is supported - callbacks are delivered
+solely when `EvokeCallback`/`EvokeMultipleCallbacks` is called, so they
+never arrive on an arbitrary JVM thread.
+
+## Building
+
+1. Build or obtain a Portico Windows distribution (headers + `lib/vc14_3` +
+   `bin/vc14_3` + `jre/`), e.g. via `cd codebase && ant sandbox` or an
+   installer.
+2. Point `PorticoRti1516e.Native` at it: set a `PorticoHome` MSBuild
+   property (e.g. `/p:PorticoHome=C:\path\to\distribution`), a
+   `PORTICO_HOME` environment variable, or create an untracked
+   `PorticoRti1516e.Native/PorticoRti1516e.Native.props` file that sets it.
+3. Open `PorticoRti1516e.sln` in Visual Studio 2022 and build (x64).
+4. At runtime, the test federate's process needs `bin\vc14_3` (for
+   `rti1516e64.dll`/`fedtime1516e64.dll`) and `jre\bin\server` (for
+   `jvm.dll`) on `PATH`, same as
+   `codebase/src/cpp/ieee1516e/example/win64-vc14_3.bat`.
