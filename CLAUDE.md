@@ -97,6 +97,20 @@ wrapper — it starts an embedded JVM and forwards calls into the Java `impl/cpp
   one tree per HLA version, run via the matching `test.<version>` target.
 - `examples/` — example federate code paired with `codebase/src/cpp/*/example/`.
 
+### .NET bridge (`dotnet/`)
+
+A standalone, Windows-only C++/CLI bridge (`PorticoRti1516e.Native`, `/clr`) that lets
+C#/.NET code drive Portico's native IEEE-1516e C++ API directly — independent of the Ant
+build, referencing a pre-built Portico Windows distribution's headers/libs. C# projects
+consume it via a normal project/assembly reference (e.g. `PorticoRti1516e.Native.TestFederate`).
+See `dotnet/README.md` for scope/layout/build instructions.
+
+**All C# projects under `dotnet/` must target .NET Framework 4.8 (`net48`)** — do not
+introduce `net6.0`/`net8.0`/.NET Standard targets here. This includes any future C# code
+added to this tree, such as a planned HLA data-encoding helper library
+(`IDataElement`/`HLAinteger32BE`/etc., mirroring
+`codebase/src/java/portico/org/portico/impl/hla1516e/types/encoding/`).
+
 ## Verification
 After making changes, run the relevant scope before declaring done:
 - Java-only change in the kernel: `cd codebase && ./ant test.portico`
