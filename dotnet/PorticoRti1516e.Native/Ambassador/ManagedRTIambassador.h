@@ -1,7 +1,7 @@
 #pragma once
 
-// Managed entry point: 1:1 (Phase A/B/C/D subset) wrapper around the native
-// rti1516e::RTIambassador, grouped to match RTI/RTIambassador.h's own
+// Managed entry point: 1:1 (Phase A/B/C/D/E1/E2 subset) wrapper around the
+// native rti1516e::RTIambassador, grouped to match RTI/RTIambassador.h's own
 // section comments (IEEE 1516.1 clause numbers) for traceability. Phase A
 // covers the connect/federation-lifecycle + synchronization-point +
 // handle-lookup slice of the API exercised by
@@ -12,9 +12,10 @@
 // timeAdvanceRequest) plus the timestamped overloads of
 // UpdateAttributeValues/SendInteraction/DeleteObjectInstance deferred from
 // B/C. Phase E1 adds ownership management (clauses 7.2-7.19) and message
-// retraction (8.21) - none of it exercised by ExampleCPPFederate's
-// runFederate(), so it's unverified beyond signature matching against
-// RTIambassador.h.
+// retraction (8.21). Phase E2 adds federation save/restore (clauses
+// 4.16/4.18/4.19/4.21/4.22/4.24/4.28/4.30/4.31). None of Phase E1/E2 is
+// exercised by ExampleCPPFederate's runFederate(), so it's unverified
+// beyond signature matching against RTIambassador.h.
 //
 // Lifetime: owns the native RTIambassador* (released from the
 // std::auto_ptr returned by RTIambassadorFactory) and the
@@ -72,6 +73,30 @@ public:
    void RegisterFederationSynchronizationPoint(String^ label, array<Byte>^ userSuppliedTag);
    void RegisterFederationSynchronizationPoint(String^ label, array<Byte>^ userSuppliedTag, IEnumerable<ManagedFederateHandle^>^ synchronizationSet);
    void SynchronizationPointAchieved(String^ label, bool successfully);
+
+   // 4.16 - federation save/restore (Phase E2, not exercised by ExampleCPPFederate)
+   void RequestFederationSave(String^ label);
+   void RequestFederationSave(String^ label, ManagedHLAfloat64Time^ time);
+
+   // 4.18 / 4.19
+   void FederateSaveBegun();
+   void FederateSaveComplete();
+   void FederateSaveNotComplete();
+
+   // 4.21 / 4.22
+   void AbortFederationSave();
+   void QueryFederationSaveStatus();
+
+   // 4.24
+   void RequestFederationRestore(String^ label);
+
+   // 4.28
+   void FederateRestoreComplete();
+   void FederateRestoreNotComplete();
+
+   // 4.30 / 4.31
+   void AbortFederationRestore();
+   void QueryFederationRestoreStatus();
 
    // 10.6 / 10.11 / 10.15 / 10.17
    ManagedObjectClassHandle^ GetObjectClassHandle(String^ name);

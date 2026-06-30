@@ -7,9 +7,9 @@
 // falls back to the generic PorticoRtiException for anything else in the
 // ~122-type native hierarchy that doesn't have a dedicated subclass yet.
 //
-// Only Phase A/B/C/D/E1's exception subset is listed here; later phases extend
-// this list as they add managed subclasses for the exceptions their slice of
-// the API throws.
+// Only Phase A/B/C/D/E1/E2's exception subset is listed here; later phases
+// extend this list as they add managed subclasses for the exceptions their
+// slice of the API throws.
 
 #include "PorticoRtiException.h"
 #include "../Types/Marshal.h"
@@ -136,6 +136,18 @@
       { throw gcnew PorticoRti1516e::MessageCanNoLongerBeRetracted(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
    catch (rti1516e::InvalidMessageRetractionHandle const & e)                                   \
       { throw gcnew PorticoRti1516e::InvalidMessageRetractionHandle(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::SaveNotInitiated const & e)                                                 \
+      { throw gcnew PorticoRti1516e::SaveNotInitiated(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::FederateHasNotBegunSave const & e)                                          \
+      { throw gcnew PorticoRti1516e::FederateHasNotBegunSave(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::SaveNotInProgress const & e)                                                \
+      { throw gcnew PorticoRti1516e::SaveNotInProgress(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::RestoreNotRequested const & e)                                              \
+      { throw gcnew PorticoRti1516e::RestoreNotRequested(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::RestoreNotInProgress const & e)                                             \
+      { throw gcnew PorticoRti1516e::RestoreNotInProgress(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::FederateUnableToUseTime const & e)                                          \
+      { throw gcnew PorticoRti1516e::FederateUnableToUseTime(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
    catch (rti1516e::Exception const & e)                                                        \
       { throw gcnew PorticoRti1516e::PorticoRtiException("rti1516e::Exception", PorticoRti1516e::Marshal::ToManaged(e.what())); }
 

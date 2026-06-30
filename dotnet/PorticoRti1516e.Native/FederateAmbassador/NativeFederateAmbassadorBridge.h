@@ -49,6 +49,62 @@ public:
       rti1516e::FederateHandleSet const & failedToSyncSet)
       throw (rti1516e::FederateInternalError) override;
 
+   // 4.17 - federation save/restore (Phase E2, not exercised by ExampleCPPFederate)
+   virtual void initiateFederateSave(
+      std::wstring const & label)
+      throw (rti1516e::FederateInternalError) override;
+
+   virtual void initiateFederateSave(
+      std::wstring const & label,
+      rti1516e::LogicalTime const & theTime)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 4.20
+   virtual void federationSaved()
+      throw (rti1516e::FederateInternalError) override;
+
+   virtual void federationNotSaved(
+      rti1516e::SaveFailureReason theSaveFailureReason)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 4.23
+   virtual void federationSaveStatusResponse(
+      rti1516e::FederateHandleSaveStatusPairVector const & theFederateStatusVector)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 4.25
+   virtual void requestFederationRestoreSucceeded(
+      std::wstring const & label)
+      throw (rti1516e::FederateInternalError) override;
+
+   virtual void requestFederationRestoreFailed(
+      std::wstring const & label)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 4.26
+   virtual void federationRestoreBegun()
+      throw (rti1516e::FederateInternalError) override;
+
+   // 4.27
+   virtual void initiateFederateRestore(
+      std::wstring const & label,
+      std::wstring const & federateName,
+      rti1516e::FederateHandle handle)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 4.29
+   virtual void federationRestored()
+      throw (rti1516e::FederateInternalError) override;
+
+   virtual void federationNotRestored(
+      rti1516e::RestoreFailureReason theRestoreFailureReason)
+      throw (rti1516e::FederateInternalError) override;
+
+   // 4.32
+   virtual void federationRestoreStatusResponse(
+      rti1516e::FederateRestoreStatusVector const & theFederateRestoreStatusVector)
+      throw (rti1516e::FederateInternalError) override;
+
    // 6.9 (no-timestamp overload only)
    virtual void discoverObjectInstance(
       rti1516e::ObjectInstanceHandle theObject,

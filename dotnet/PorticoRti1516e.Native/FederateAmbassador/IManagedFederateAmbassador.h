@@ -1,23 +1,24 @@
 #pragma once
 
 // Managed callback interface a C# federate implements to receive RTI
-// callbacks. Mirrors the Phase A/B/C/D/E1 subset of RTI/FederateAmbassador.h
-// (the ~60-method pure-virtual native interface) - the methods that
-// ExampleCPPFederate's ExampleFedAmb overrides for the connect/federation
-// lifecycle + synchronization-point slice of the API (Phase A), the
-// no-timestamp object discovery/reflect/remove callbacks (Phase B), the
-// no-timestamp interaction-receive callback (Phase C), time management plus
-// the timestamped (no retraction handle) overloads of
+// callbacks. Mirrors the Phase A/B/C/D/E1/E2 subset of
+// RTI/FederateAmbassador.h (the ~60-method pure-virtual native interface) -
+// the methods that ExampleCPPFederate's ExampleFedAmb overrides for the
+// connect/federation lifecycle + synchronization-point slice of the API
+// (Phase A), the no-timestamp object discovery/reflect/remove callbacks
+// (Phase B), the no-timestamp interaction-receive callback (Phase C), time
+// management plus the timestamped (no retraction handle) overloads of
 // ReflectAttributeValues/ReceiveInteraction/RemoveObjectInstance (Phase D),
-// and ownership management plus the retraction-handle overloads of
+// ownership management plus the retraction-handle overloads of
 // ReflectAttributeValues/ReceiveInteraction/RemoveObjectInstance and the
-// message-retraction RequestRetraction callback (Phase E1). None of Phase
-// E1's callbacks are exercised by ExampleCPPFederate's runFederate(), so
-// they're unverified beyond signature matching against FederateAmbassador.h.
-// Remaining callbacks (save-restore, DDM/regions, MOM) are added to this
-// interface in the phase that first needs them, matching
-// NativeFederateAmbassadorBridge, which inherits NullFederateAmbassador and
-// so safely no-ops anything not yet forwarded here.
+// message-retraction RequestRetraction callback (Phase E1), and federation
+// save/restore (Phase E2). None of Phase E1/E2's callbacks are exercised by
+// ExampleCPPFederate's runFederate(), so they're unverified beyond signature
+// matching against FederateAmbassador.h. Remaining callbacks (DDM/regions,
+// MOM) are added to this interface in the phase that first needs them,
+// matching NativeFederateAmbassadorBridge, which inherits
+// NullFederateAmbassador and so safely no-ops anything not yet forwarded
+// here.
 
 #include "../Handles/ManagedHandles.h"
 #include "../Time/ManagedHLAfloat64Time.h"
@@ -31,6 +32,74 @@ public enum class ManagedSynchronizationPointFailureReason
 {
    SynchronizationPointLabelNotUnique,
    SynchronizationSetMemberNotJoined
+};
+
+// RTI/Enums.h SaveStatus/RestoreStatus/SaveFailureReason/RestoreFailureReason
+// (Phase E2).
+public enum class ManagedSaveStatus
+{
+   NoSaveInProgress,
+   FederateInstructedToSave,
+   FederateSaving,
+   FederateWaitingForFederationToSave
+};
+
+public enum class ManagedRestoreStatus
+{
+   NoRestoreInProgress,
+   FederateRestoreRequestPending,
+   FederateWaitingForRestoreToBegin,
+   FederatePreparedToRestore,
+   FederateRestoring,
+   FederateWaitingForFederationToRestore
+};
+
+public enum class ManagedSaveFailureReason
+{
+   RtiUnableToSave,
+   FederateReportedFailureDuringSave,
+   FederateResignedDuringSave,
+   RtiDetectedFailureDuringSave,
+   SaveTimeCannotBeHonored,
+   SaveAborted
+};
+
+public enum class ManagedRestoreFailureReason
+{
+   RtiUnableToRestore,
+   FederateReportedFailureDuringRestore,
+   FederateResignedDuringRestore,
+   RtiDetectedFailureDuringRestore,
+   RestoreAborted
+};
+
+// RTI/Typedefs.h FederateHandleSaveStatusPair (Phase E2). Plain data holder,
+// not an opaque native handle wrapper - no DEFINE_MANAGED_HANDLE pattern
+// needed here.
+public ref class ManagedFederateHandleSaveStatusPair sealed
+{
+public:
+   ManagedFederateHandleSaveStatusPair(ManagedFederateHandle^ federate, ManagedSaveStatus status)
+      : Federate(federate), Status(status)
+   {
+   }
+
+   property ManagedFederateHandle^ Federate;
+   property ManagedSaveStatus Status;
+};
+
+// RTI/Typedefs.h FederateRestoreStatus (Phase E2). Plain data holder.
+public ref class ManagedFederateRestoreStatus sealed
+{
+public:
+   ManagedFederateRestoreStatus(ManagedFederateHandle^ preRestoreHandle, ManagedFederateHandle^ postRestoreHandle, ManagedRestoreStatus status)
+      : PreRestoreHandle(preRestoreHandle), PostRestoreHandle(postRestoreHandle), Status(status)
+   {
+   }
+
+   property ManagedFederateHandle^ PreRestoreHandle;
+   property ManagedFederateHandle^ PostRestoreHandle;
+   property ManagedRestoreStatus Status;
 };
 
 public interface class IManagedFederateAmbassador
@@ -50,6 +119,34 @@ public:
 
    // 4.15
    void FederationSynchronized(String^ label, IEnumerable<ManagedFederateHandle^>^ failedToSyncSet);
+
+   // 4.17 - federation save/restore (Phase E2, not exercised by ExampleCPPFederate)
+   void InitiateFederateSave(String^ label);
+   void InitiateFederateSave(String^ label, ManagedHLAfloat64Time^ time);
+
+   // 4.20
+   void FederationSaved();
+   void FederationNotSaved(ManagedSaveFailureReason reason);
+
+   // 4.23
+   void FederationSaveStatusResponse(IEnumerable<ManagedFederateHandleSaveStatusPair^>^ federateStatusVector);
+
+   // 4.25
+   void RequestFederationRestoreSucceeded(String^ label);
+   void RequestFederationRestoreFailed(String^ label);
+
+   // 4.26
+   void FederationRestoreBegun();
+
+   // 4.27
+   void InitiateFederateRestore(String^ label, String^ federateName, ManagedFederateHandle^ handle);
+
+   // 4.29
+   void FederationRestored();
+   void FederationNotRestored(ManagedRestoreFailureReason reason);
+
+   // 4.32
+   void FederationRestoreStatusResponse(IEnumerable<ManagedFederateRestoreStatus^>^ federateRestoreStatusVector);
 
    // 6.9 (no-timestamp overload only - the producingFederate overload is
    // deferred, nothing in Phase B needs it)

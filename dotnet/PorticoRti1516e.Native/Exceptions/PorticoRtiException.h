@@ -115,6 +115,16 @@ DEFINE_MANAGED_EXCEPTION(AttributeAlreadyOwned)
 DEFINE_MANAGED_EXCEPTION(MessageCanNoLongerBeRetracted)
 DEFINE_MANAGED_EXCEPTION(InvalidMessageRetractionHandle)
 
+// Phase E2 additions - thrown by federation save/restore (RTI/RTIambassador.h
+// clauses 4.16/4.18/4.19/4.21/4.24/4.28/4.30). SaveInProgress and
+// RestoreInProgress were already added in Phase A.
+DEFINE_MANAGED_EXCEPTION(SaveNotInitiated)
+DEFINE_MANAGED_EXCEPTION(FederateHasNotBegunSave)
+DEFINE_MANAGED_EXCEPTION(SaveNotInProgress)
+DEFINE_MANAGED_EXCEPTION(RestoreNotRequested)
+DEFINE_MANAGED_EXCEPTION(RestoreNotInProgress)
+DEFINE_MANAGED_EXCEPTION(FederateUnableToUseTime)
+
 #undef DEFINE_MANAGED_EXCEPTION
 
 }

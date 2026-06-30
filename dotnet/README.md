@@ -1,4 +1,4 @@
-# PorticoRti1516e.Native (C#/.NET bridge, Phase A + B + C + D + E1)
+# PorticoRti1516e.Native (C#/.NET bridge, Phase A + B + C + D + E1 + E2)
 
 A C++/CLI bridge over Portico's native IEEE-1516e C++ API
 (`codebase/src/cpp/ieee1516e/`), so C#/.NET code can drive a Portico
@@ -28,7 +28,7 @@ machine before relying on it.
     `double`-backed wrappers around the only concrete `LogicalTime`/
     `LogicalTimeInterval` implementation `ExampleCPPFederate.cpp` uses.
   - `Exceptions/` - `PorticoRtiException` base + concrete subclasses for the
-    native exceptions Phase A-D-E1 actually throw, plus the
+    native exceptions Phase A-D-E1-E2 actually throw, plus the
     `RTI_CATCH_AND_RETHROW` macro used at every native call site.
   - `FederateAmbassador/` - `IManagedFederateAmbassador` (the interface a C#
     federate implements) and `NativeFederateAmbassadorBridge`, the native
@@ -38,11 +38,12 @@ machine before relying on it.
 - `PorticoRti1516e.Native.TestFederate/` - a C# console app mirroring the
   full Phase A+B+C+D subset of `ExampleCPPFederate::runFederate()`'s call
   sequence, for manual verification once built. Phase E1 (ownership
-  management/message retraction) is not exercised by this test federate -
-  `ExampleCPPFederate.cpp`'s own `runFederate()` doesn't use those services
-  either, so there's no reference call sequence to port.
+  management/message retraction) and Phase E2 (federation save/restore) are
+  not exercised by this test federate - `ExampleCPPFederate.cpp`'s own
+  `runFederate()` doesn't use those services either, so there's no
+  reference call sequence to port.
 
-## Scope: Phase A + B + C + D + E1
+## Scope: Phase A + B + C + D + E1 + E2
 
 Connect/disconnect, create/destroy/join/resign federation execution,
 synchronization points, handle lookups, and `evoke(Multiple)Callbacks`
@@ -75,13 +76,24 @@ overloads of `ReflectAttributeValues`/`ReceiveInteraction`/
 `InformAttributeOwnership`, `AttributeIsNotOwned`, `AttributeIsOwnedByRTI`),
 plus message retraction - `Retract` and the `RequestRetraction` callback,
 plus the retraction-handle overloads of `ReflectAttributeValues`/
-`ReceiveInteraction`/`RemoveObjectInstance` (Phase E1). Phase E1's API
-surface is unverified beyond signature-matching against
+`ReceiveInteraction`/`RemoveObjectInstance` (Phase E1), plus federation
+save/restore - `RequestFederationSave` (no-timestamp and timestamped
+overloads), `FederateSaveBegun`/`FederateSaveComplete`/
+`FederateSaveNotComplete`, `AbortFederationSave`/`QueryFederationSaveStatus`,
+`RequestFederationRestore`,
+`FederateRestoreComplete`/`FederateRestoreNotComplete`,
+`AbortFederationRestore`/`QueryFederationRestoreStatus`, and the matching
+11 callbacks (`InitiateFederateSave` (2 overloads), `FederationSaved`,
+`FederationNotSaved`, `FederationSaveStatusResponse`,
+`RequestFederationRestoreSucceeded`, `RequestFederationRestoreFailed`,
+`FederationRestoreBegun`, `InitiateFederateRestore`, `FederationRestored`,
+`FederationNotRestored`, `FederationRestoreStatusResponse`) (Phase E2).
+Phase E1/E2's API surface is unverified beyond signature-matching against
 `RTI/RTIambassador.h`/`RTI/FederateAmbassador.h`, since
-`ExampleCPPFederate.cpp` doesn't exercise ownership management or message
-retraction.
-**Not yet implemented**: DDM/regions, save/restore, and MOM (Phase
-E2-E4). Calling anything outside Phase A/B/C/D/E1 means using
+`ExampleCPPFederate.cpp` doesn't exercise ownership management, message
+retraction, or save/restore.
+**Not yet implemented**: DDM/regions and MOM (Phase E3-E4). Calling
+anything outside Phase A/B/C/D/E1/E2 means using
 `NativeFederateAmbassadorBridge`'s inherited `NullFederateAmbassador`
 no-ops for any callback not listed above, and there is currently no
 managed surface on `ManagedRTIambassador` for those service areas at all.

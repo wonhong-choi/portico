@@ -242,6 +242,129 @@ void ManagedRTIambassador::SynchronizationPointAchieved(String^ label, bool succ
    RTI_CATCH_AND_RETHROW
 }
 
+void ManagedRTIambassador::RequestFederationSave(String^ label)
+{
+   EnsureConnected();
+   try
+   {
+      _native->requestFederationSave(Marshal::ToNative(label));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::RequestFederationSave(String^ label, ManagedHLAfloat64Time^ time)
+{
+   EnsureConnected();
+   if (time == nullptr)
+      throw gcnew ArgumentNullException("time");
+
+   try
+   {
+      _native->requestFederationSave(Marshal::ToNative(label), time->ToNative());
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::FederateSaveBegun()
+{
+   EnsureConnected();
+   try
+   {
+      _native->federateSaveBegun();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::FederateSaveComplete()
+{
+   EnsureConnected();
+   try
+   {
+      _native->federateSaveComplete();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::FederateSaveNotComplete()
+{
+   EnsureConnected();
+   try
+   {
+      _native->federateSaveNotComplete();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::AbortFederationSave()
+{
+   EnsureConnected();
+   try
+   {
+      _native->abortFederationSave();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::QueryFederationSaveStatus()
+{
+   EnsureConnected();
+   try
+   {
+      _native->queryFederationSaveStatus();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::RequestFederationRestore(String^ label)
+{
+   EnsureConnected();
+   try
+   {
+      _native->requestFederationRestore(Marshal::ToNative(label));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::FederateRestoreComplete()
+{
+   EnsureConnected();
+   try
+   {
+      _native->federateRestoreComplete();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::FederateRestoreNotComplete()
+{
+   EnsureConnected();
+   try
+   {
+      _native->federateRestoreNotComplete();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::AbortFederationRestore()
+{
+   EnsureConnected();
+   try
+   {
+      _native->abortFederationRestore();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::QueryFederationRestoreStatus()
+{
+   EnsureConnected();
+   try
+   {
+      _native->queryFederationRestoreStatus();
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
 ManagedObjectClassHandle^ ManagedRTIambassador::GetObjectClassHandle(String^ name)
 {
    EnsureConnected();
