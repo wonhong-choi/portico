@@ -1,13 +1,14 @@
 #pragma once
 
 // Managed callback interface a C# federate implements to receive RTI
-// callbacks. Mirrors the Phase A/B subset of RTI/FederateAmbassador.h (the
+// callbacks. Mirrors the Phase A/B/C subset of RTI/FederateAmbassador.h (the
 // ~60-method pure-virtual native interface) - the methods that
 // ExampleCPPFederate's ExampleFedAmb overrides for the connect/federation
-// lifecycle + synchronization-point slice of the API (Phase A), plus the
-// no-timestamp object discovery/reflect/remove callbacks (Phase B).
-// Remaining callbacks (interaction/ownership/time/save-restore) are added
-// to this interface in the phase that first needs them (C/D/E), matching
+// lifecycle + synchronization-point slice of the API (Phase A), the
+// no-timestamp object discovery/reflect/remove callbacks (Phase B), and the
+// no-timestamp interaction-receive callback (Phase C).
+// Remaining callbacks (ownership/time/save-restore) are added to this
+// interface in the phase that first needs them (D/E), matching
 // NativeFederateAmbassadorBridge, which inherits NullFederateAmbassador and
 // so safely no-ops anything not yet forwarded here.
 
@@ -58,6 +59,12 @@ public:
    // 6.15 (no-timestamp overload only - the timestamped overloads are Phase D)
    void RemoveObjectInstance(
       ManagedObjectInstanceHandle^ objectInstance,
+      array<Byte>^ userSuppliedTag);
+
+   // 6.13 (no-timestamp overload only - the timestamped overloads are Phase D)
+   void ReceiveInteraction(
+      ManagedInteractionClassHandle^ interactionClass,
+      IDictionary<ManagedParameterHandle^, array<Byte>^>^ parameterValues,
       array<Byte>^ userSuppliedTag);
 };
 

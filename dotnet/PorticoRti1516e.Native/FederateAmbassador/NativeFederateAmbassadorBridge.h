@@ -74,6 +74,16 @@ public:
       rti1516e::SupplementalRemoveInfo theRemoveInfo)
       throw (rti1516e::FederateInternalError) override;
 
+   // 6.13 (no-timestamp overload only)
+   virtual void receiveInteraction(
+      rti1516e::InteractionClassHandle theInteraction,
+      rti1516e::ParameterHandleValueMap const & theParameterValues,
+      rti1516e::VariableLengthData const & theUserSuppliedTag,
+      rti1516e::OrderType sentOrder,
+      rti1516e::TransportationType theType,
+      rti1516e::SupplementalReceiveInfo theReceiveInfo)
+      throw (rti1516e::FederateInternalError) override;
+
 private:
    gcroot<IManagedFederateAmbassador^> _managed;
 };

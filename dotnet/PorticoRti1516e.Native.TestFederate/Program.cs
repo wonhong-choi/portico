@@ -5,8 +5,9 @@ using PorticoRti1516e;
 
 namespace PorticoRti1516e.Native.TestFederate
 {
-    // C# port of the Phase A+B subset of ExampleCPPFederate::runFederate() -
-    // steps 1-9 and 11-15 of the 15-step sequence in
+    // C# port of the Phase A+B+C subset of ExampleCPPFederate::runFederate() -
+    // all 15 steps (with steps 9/10 limited to their no-timestamp overloads)
+    // of the 15-step sequence in
     // codebase/src/cpp/ieee1516e/example/ExampleCPPFederate.cpp:
     //   1. create ambassador
     //   2. connect
@@ -14,11 +15,12 @@ namespace PorticoRti1516e.Native.TestFederate
     //   4. join federation execution
     //   5. resolve handles used by this test
     //   6. register + announce + achieve a synchronization point
-    //   7. publish/subscribe ObjectRoot.A's attributes (aa/ab/ac)
+    //   7. publish/subscribe ObjectRoot.A's attributes (aa/ab/ac) and
+    //      InteractionRoot.X (xa/xb)
     //   8. register an ObjectRoot.A instance
     //   9. update its attribute values (no-timestamp)
-    //   (step 10, interactions, and the timestamped update in step 9 are
-    //   Phase C/D - out of scope here)
+    //   10. send an InteractionRoot.X interaction (no-timestamp)
+    //   (the timestamped overloads of steps 9/10 are Phase D - out of scope here)
     //   11. delete the object instance
     //   12. resign federation execution
     //   13. destroy federation execution
@@ -34,7 +36,7 @@ namespace PorticoRti1516e.Native.TestFederate
     {
         private const string FederationName = "ExampleFederation";
         private const string FederateType = "papola"; // matches ExampleCPPFederate's default
-        private const string FomModule = "RestaurantProcesses.xml"; // matches the example FOM
+        private const string FomModule = "testfom.fed"; // matches ExampleCPPFederate.cpp's createFederationExecution call
 
         private static void Main(string[] args)
         {
@@ -81,18 +83,24 @@ namespace PorticoRti1516e.Native.TestFederate
                     rtiAmb.EvokeMultipleCallbacks(0.1, 1.0);
                 }
 
-                Console.WriteLine("Synchronized. (Interaction/time steps are Phase C/D - skipped here.)");
+                Console.WriteLine("Synchronized. (Time-managed steps are Phase D - skipped here.)");
 
-                Console.WriteLine("Resolving ObjectRoot.A handles...");
+                Console.WriteLine("Resolving ObjectRoot.A and InteractionRoot.X handles...");
                 var objectClassHandle = rtiAmb.GetObjectClassHandle("ObjectRoot.A");
                 var aaHandle = rtiAmb.GetAttributeHandle(objectClassHandle, "aa");
                 var abHandle = rtiAmb.GetAttributeHandle(objectClassHandle, "ab");
                 var acHandle = rtiAmb.GetAttributeHandle(objectClassHandle, "ac");
                 var attributeHandles = new[] { aaHandle, abHandle, acHandle };
 
-                Console.WriteLine("Publishing and subscribing ObjectRoot.A attributes...");
+                var interactionClassHandle = rtiAmb.GetInteractionClassHandle("InteractionRoot.X");
+                var xaHandle = rtiAmb.GetParameterHandle(interactionClassHandle, "xa");
+                var xbHandle = rtiAmb.GetParameterHandle(interactionClassHandle, "xb");
+
+                Console.WriteLine("Publishing and subscribing ObjectRoot.A attributes and InteractionRoot.X...");
                 rtiAmb.PublishObjectClassAttributes(objectClassHandle, attributeHandles);
                 rtiAmb.SubscribeObjectClassAttributes(objectClassHandle, attributeHandles);
+                rtiAmb.PublishInteractionClass(interactionClassHandle);
+                rtiAmb.SubscribeInteractionClass(interactionClassHandle);
 
                 Console.WriteLine("Registering an ObjectRoot.A instance...");
                 var objectInstanceHandle = rtiAmb.RegisterObjectInstance(objectClassHandle);
@@ -106,6 +114,14 @@ namespace PorticoRti1516e.Native.TestFederate
                     { acHandle, Encoding.ASCII.GetBytes("ac:" + DateTime.UtcNow.Ticks) },
                 };
                 rtiAmb.UpdateAttributeValues(objectInstanceHandle, attributeValues, Encoding.ASCII.GetBytes("Hi!"));
+
+                Console.WriteLine("Sending an InteractionRoot.X interaction...");
+                var parameterValues = new Dictionary<ManagedParameterHandle, byte[]>
+                {
+                    { xaHandle, Encoding.ASCII.GetBytes("xa:" + DateTime.UtcNow.Ticks) },
+                    { xbHandle, Encoding.ASCII.GetBytes("xb:" + DateTime.UtcNow.Ticks) },
+                };
+                rtiAmb.SendInteraction(interactionClassHandle, parameterValues, Encoding.ASCII.GetBytes("Hi!"));
 
                 Console.WriteLine("Deleting the object instance...");
                 rtiAmb.DeleteObjectInstance(objectInstanceHandle, null);
@@ -179,6 +195,11 @@ namespace PorticoRti1516e.Native.TestFederate
         public void RemoveObjectInstance(ManagedObjectInstanceHandle objectInstance, byte[] userSuppliedTag)
         {
             Console.WriteLine("[callback] RemoveObjectInstance: " + objectInstance);
+        }
+
+        public void ReceiveInteraction(ManagedInteractionClassHandle interactionClass, IDictionary<ManagedParameterHandle, byte[]> parameterValues, byte[] userSuppliedTag)
+        {
+            Console.WriteLine("[callback] ReceiveInteraction: " + interactionClass + " (" + parameterValues.Count + " parameters)");
         }
     }
 }

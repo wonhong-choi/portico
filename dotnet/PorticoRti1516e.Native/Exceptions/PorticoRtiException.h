@@ -80,6 +80,11 @@ DEFINE_MANAGED_EXCEPTION(AttributeNotOwned)
 DEFINE_MANAGED_EXCEPTION(ObjectInstanceNotKnown)
 DEFINE_MANAGED_EXCEPTION(DeletePrivilegeNotHeld)
 
+// Phase C additions - thrown by publish/subscribe/send interaction
+// (RTI/RTIambassador.h clauses 5.x / 6.x interaction equivalents).
+DEFINE_MANAGED_EXCEPTION(FederateServiceInvocationsAreBeingReportedViaMOM)
+DEFINE_MANAGED_EXCEPTION(InteractionClassNotPublished)
+
 #undef DEFINE_MANAGED_EXCEPTION
 
 }

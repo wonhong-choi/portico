@@ -1,14 +1,15 @@
 #pragma once
 
-// Managed entry point: 1:1 (Phase A/B subset) wrapper around the native
+// Managed entry point: 1:1 (Phase A/B/C subset) wrapper around the native
 // rti1516e::RTIambassador, grouped to match RTI/RTIambassador.h's own
 // section comments (IEEE 1516.1 clause numbers) for traceability. Phase A
 // covers the connect/federation-lifecycle + synchronization-point +
 // handle-lookup slice of the API exercised by
 // ExampleCPPFederate::runFederate() steps 1-6 and 12-15. Phase B adds the
 // no-timestamp object pub/sub/register/update/delete slice (steps 7-9/11).
-// Interactions (Phase C) and time management (Phase D) methods are added
-// to this class in their own phases.
+// Phase C adds the no-timestamp interaction pub/sub/send slice (step 10).
+// Time management (Phase D) methods are added to this class in their own
+// phase.
 //
 // Lifetime: owns the native RTIambassador* (released from the
 // std::auto_ptr returned by RTIambassadorFactory) and the
@@ -83,6 +84,14 @@ public:
       IDictionary<ManagedAttributeHandle^, array<Byte>^>^ attributeValues,
       array<Byte>^ userSuppliedTag);
    void DeleteObjectInstance(ManagedObjectInstanceHandle^ objectInstance, array<Byte>^ userSuppliedTag);
+
+   // 5.4 / 5.8 / 6.12
+   void PublishInteractionClass(ManagedInteractionClassHandle^ interactionClass);
+   void SubscribeInteractionClass(ManagedInteractionClassHandle^ interactionClass);
+   void SendInteraction(
+      ManagedInteractionClassHandle^ interactionClass,
+      IDictionary<ManagedParameterHandle^, array<Byte>^>^ parameterValues,
+      array<Byte>^ userSuppliedTag);
 
    // 10.41 - 10.44
    bool EvokeCallback(double approximateMinimumTimeInSeconds);

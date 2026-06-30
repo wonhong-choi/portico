@@ -110,4 +110,19 @@ void NativeFederateAmbassadorBridge::removeObjectInstance(
       Marshal::ToManaged(theUserSuppliedTag));
 }
 
+void NativeFederateAmbassadorBridge::receiveInteraction(
+   rti1516e::InteractionClassHandle theInteraction,
+   rti1516e::ParameterHandleValueMap const & theParameterValues,
+   rti1516e::VariableLengthData const & theUserSuppliedTag,
+   rti1516e::OrderType sentOrder,
+   rti1516e::TransportationType theType,
+   rti1516e::SupplementalReceiveInfo theReceiveInfo)
+   throw (rti1516e::FederateInternalError)
+{
+   _managed->ReceiveInteraction(
+      gcnew ManagedInteractionClassHandle(theInteraction),
+      Marshal::ToManaged(theParameterValues),
+      Marshal::ToManaged(theUserSuppliedTag));
+}
+
 }

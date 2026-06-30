@@ -411,4 +411,47 @@ void ManagedRTIambassador::DeleteObjectInstance(ManagedObjectInstanceHandle^ obj
    RTI_CATCH_AND_RETHROW
 }
 
+void ManagedRTIambassador::PublishInteractionClass(ManagedInteractionClassHandle^ interactionClass)
+{
+   EnsureConnected();
+   if (interactionClass == nullptr)
+      throw gcnew ArgumentNullException("interactionClass");
+
+   try
+   {
+      _native->publishInteractionClass(interactionClass->ToNative());
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::SubscribeInteractionClass(ManagedInteractionClassHandle^ interactionClass)
+{
+   EnsureConnected();
+   if (interactionClass == nullptr)
+      throw gcnew ArgumentNullException("interactionClass");
+
+   try
+   {
+      _native->subscribeInteractionClass(interactionClass->ToNative());
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
+void ManagedRTIambassador::SendInteraction(
+   ManagedInteractionClassHandle^ interactionClass,
+   IDictionary<ManagedParameterHandle^, array<Byte>^>^ parameterValues,
+   array<Byte>^ userSuppliedTag)
+{
+   EnsureConnected();
+   if (interactionClass == nullptr)
+      throw gcnew ArgumentNullException("interactionClass");
+
+   try
+   {
+      _native->sendInteraction(
+         interactionClass->ToNative(), Marshal::ToNative(parameterValues), Marshal::ToNative(userSuppliedTag));
+   }
+   RTI_CATCH_AND_RETHROW
+}
+
 }

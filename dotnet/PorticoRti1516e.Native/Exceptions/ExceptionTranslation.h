@@ -7,8 +7,8 @@
 // falls back to the generic PorticoRtiException for anything else in the
 // ~122-type native hierarchy that doesn't have a dedicated subclass yet.
 //
-// Only Phase A/B's exception subset is listed here; later phases extend this
-// list as they add managed subclasses for the exceptions their slice of
+// Only Phase A/B/C's exception subset is listed here; later phases extend
+// this list as they add managed subclasses for the exceptions their slice of
 // the API throws.
 
 #include "PorticoRtiException.h"
@@ -94,6 +94,10 @@
       { throw gcnew PorticoRti1516e::ObjectInstanceNotKnown(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
    catch (rti1516e::DeletePrivilegeNotHeld const & e)                                           \
       { throw gcnew PorticoRti1516e::DeletePrivilegeNotHeld(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::FederateServiceInvocationsAreBeingReportedViaMOM const & e)                 \
+      { throw gcnew PorticoRti1516e::FederateServiceInvocationsAreBeingReportedViaMOM(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
+   catch (rti1516e::InteractionClassNotPublished const & e)                                     \
+      { throw gcnew PorticoRti1516e::InteractionClassNotPublished(PorticoRti1516e::Marshal::ToManaged(e.what())); } \
    catch (rti1516e::Exception const & e)                                                        \
       { throw gcnew PorticoRti1516e::PorticoRtiException("rti1516e::Exception", PorticoRti1516e::Marshal::ToManaged(e.what())); }
 

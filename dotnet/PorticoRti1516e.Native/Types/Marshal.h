@@ -2,9 +2,10 @@
 
 // Free functions for converting between native API types and their managed
 // equivalents, used throughout the bridge: std::wstring <-> System::String
-// (Phase A), and VariableLengthData <-> byte[] plus
+// (Phase A), VariableLengthData <-> byte[] plus
 // AttributeHandleValueMap/AttributeHandleSet <-> Dictionary/IEnumerable
-// (Phase B, the first phase that needs payload/attribute-map marshaling).
+// (Phase B), and ParameterHandleValueMap <-> Dictionary (Phase C, interaction
+// parameters - reuses the same map-marshaling shape as attribute values).
 
 #include "../Handles/ManagedHandles.h"
 #include <RTI/VariableLengthData.h>
@@ -27,6 +28,9 @@ namespace Marshal {
 
    rti1516e::AttributeHandleValueMap ToNative(IDictionary<ManagedAttributeHandle^, array<Byte>^>^ managed);
    IDictionary<ManagedAttributeHandle^, array<Byte>^>^ ToManaged(rti1516e::AttributeHandleValueMap const & native);
+
+   rti1516e::ParameterHandleValueMap ToNative(IDictionary<ManagedParameterHandle^, array<Byte>^>^ managed);
+   IDictionary<ManagedParameterHandle^, array<Byte>^>^ ToManaged(rti1516e::ParameterHandleValueMap const & native);
 
 }
 }

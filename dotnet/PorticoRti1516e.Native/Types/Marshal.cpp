@@ -70,5 +70,26 @@ IDictionary<ManagedAttributeHandle^, array<Byte>^>^ ToManaged(rti1516e::Attribut
    return managed;
 }
 
+rti1516e::ParameterHandleValueMap ToNative(IDictionary<ManagedParameterHandle^, array<Byte>^>^ managed)
+{
+   rti1516e::ParameterHandleValueMap native;
+   if (managed != nullptr)
+   {
+      for each (KeyValuePair<ManagedParameterHandle^, array<Byte>^> entry in managed)
+         native[entry.Key->ToNative()] = ToNative(entry.Value);
+   }
+   return native;
+}
+
+IDictionary<ManagedParameterHandle^, array<Byte>^>^ ToManaged(rti1516e::ParameterHandleValueMap const & native)
+{
+   Dictionary<ManagedParameterHandle^, array<Byte>^>^ managed = gcnew Dictionary<ManagedParameterHandle^, array<Byte>^>();
+   for (rti1516e::ParameterHandleValueMap::const_iterator it = native.begin(); it != native.end(); ++it)
+   {
+      managed->Add(gcnew ManagedParameterHandle(it->first), ToManaged(it->second));
+   }
+   return managed;
+}
+
 }
 }

@@ -36,7 +36,7 @@ machine before relying on it.
   Phase A subset of `ExampleCPPFederate::runFederate()`'s call sequence, for
   manual verification once built.
 
-## Scope: Phase A + B
+## Scope: Phase A + B + C
 
 Connect/disconnect, create/destroy/join/resign federation execution,
 synchronization points, handle lookups, and `evoke(Multiple)Callbacks`
@@ -44,10 +44,12 @@ synchronization points, handle lookups, and `evoke(Multiple)Callbacks`
 `PublishObjectClassAttributes`/`SubscribeObjectClassAttributes`,
 `RegisterObjectInstance`, `UpdateAttributeValues`, `DeleteObjectInstance`,
 and the matching `DiscoverObjectInstance`/`ReflectAttributeValues`/
-`RemoveObjectInstance` callbacks (Phase B). **Not yet implemented**:
-interactions (Phase C), time management - including the timestamped
-overloads of the Phase B methods (Phase D), ownership/DDM/save-restore
-(Phase E). Calling anything outside Phase A/B means using
+`RemoveObjectInstance` callbacks (Phase B), plus no-timestamp interaction
+pub/sub/send - `PublishInteractionClass`/`SubscribeInteractionClass`/
+`SendInteraction`, and the matching `ReceiveInteraction` callback (Phase C).
+**Not yet implemented**: time management - including the timestamped
+overloads of the Phase B/C methods (Phase D), ownership/DDM/save-restore
+(Phase E). Calling anything outside Phase A/B/C means using
 `NativeFederateAmbassadorBridge`'s inherited `NullFederateAmbassador` no-ops
 for any callback not listed above, and there is currently no managed
 surface on `ManagedRTIambassador` for those service areas at all.
@@ -69,4 +71,8 @@ never arrive on an arbitrary JVM thread.
 4. At runtime, the test federate's process needs `bin\vc14_3` (for
    `rti1516e64.dll`/`fedtime1516e64.dll`) and `jre\bin\server` (for
    `jvm.dll`) on `PATH`, same as
-   `codebase/src/cpp/ieee1516e/example/win64-vc14_3.bat`.
+   `codebase/src/cpp/ieee1516e/example/win64-vc14_3.bat`. It also needs
+   `codebase/src/cpp/ieee1516e/example/testfom.fed` (the same FOM
+   `ExampleCPPFederate.cpp` loads) copied next to the test federate's
+   executable, since `CreateFederationExecution` passes that file name to
+   the RTI.
