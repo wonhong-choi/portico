@@ -1,4 +1,4 @@
-# PorticoRti1516e.Native (C#/.NET bridge, Phase A)
+# PorticoRti1516e.Native (C#/.NET bridge, Phase A + B + C)
 
 A C++/CLI bridge over Portico's native IEEE-1516e C++ API
 (`codebase/src/cpp/ieee1516e/`), so C#/.NET code can drive a Portico
