@@ -36,8 +36,8 @@ machine before relying on it.
     `gcroot`.
   - `Ambassador/ManagedRTIambassador` - the main entry point.
 - `PorticoRti1516e.Native.TestFederate/` - a C# console app mirroring the
-  Phase A subset of `ExampleCPPFederate::runFederate()`'s call sequence, for
-  manual verification once built.
+  full Phase A+B+C+D subset of `ExampleCPPFederate::runFederate()`'s call
+  sequence, for manual verification once built.
 
 ## Scope: Phase A + B + C + D
 
