@@ -116,6 +116,16 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
+    <!--
+      /clr auto-references mscorlib.dll only (String, List<T>, Dictionary<K,V>,
+      Exception, etc. all live there). System::Diagnostics::Debug (used in
+      ManagedRTIambassador's finalizer) lives in System.dll instead, which needs
+      an explicit reference like any other .NET assembly.
+    -->
+    <Reference Include="System" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ClInclude Include="Handles\ManagedHandles.h" />
     <ClInclude Include="Types\Marshal.h" />
     <ClInclude Include="Exceptions\PorticoRtiException.h" />
