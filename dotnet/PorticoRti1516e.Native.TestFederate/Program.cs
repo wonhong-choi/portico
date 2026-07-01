@@ -271,5 +271,141 @@ namespace PorticoRti1516e.Native.TestFederate
             IsAdvancing = false;
             FederateTime = time.Time;
         }
+
+        // The callbacks below (retraction-handle overloads, ownership management,
+        // message retraction, and federation save/restore) are part of the
+        // IManagedFederateAmbassador interface added in Phases D/E1/E2 but are NOT
+        // exercised by ExampleCPPFederate's runFederate() sequence that this test
+        // federate mirrors. They are implemented as logging no-ops purely to satisfy
+        // the interface contract - a real federate would fill these in as needed.
+
+        // 6.11 / 6.15 / 6.13 retraction-handle overloads (Phase E1)
+        public void ReflectAttributeValues(ManagedObjectInstanceHandle objectInstance, IDictionary<ManagedAttributeHandle, byte[]> attributeValues, byte[] userSuppliedTag, ManagedHLAfloat64Time time, ManagedMessageRetractionHandle retractionHandle)
+        {
+            Console.WriteLine("[callback] ReflectAttributeValues (timestamped, retractable): " + objectInstance + " @ " + time.Time);
+        }
+
+        public void RemoveObjectInstance(ManagedObjectInstanceHandle objectInstance, byte[] userSuppliedTag, ManagedHLAfloat64Time time, ManagedMessageRetractionHandle retractionHandle)
+        {
+            Console.WriteLine("[callback] RemoveObjectInstance (timestamped, retractable): " + objectInstance + " @ " + time.Time);
+        }
+
+        public void ReceiveInteraction(ManagedInteractionClassHandle interactionClass, IDictionary<ManagedParameterHandle, byte[]> parameterValues, byte[] userSuppliedTag, ManagedHLAfloat64Time time, ManagedMessageRetractionHandle retractionHandle)
+        {
+            Console.WriteLine("[callback] ReceiveInteraction (timestamped, retractable): " + interactionClass + " @ " + time.Time);
+        }
+
+        // 8.22 message retraction (Phase E1)
+        public void RequestRetraction(ManagedMessageRetractionHandle retractionHandle)
+        {
+            Console.WriteLine("[callback] RequestRetraction: " + retractionHandle);
+        }
+
+        // 7.x ownership management (Phase E1)
+        public void RequestAttributeOwnershipAssumption(ManagedObjectInstanceHandle objectInstance, IEnumerable<ManagedAttributeHandle> offeredAttributes, byte[] userSuppliedTag)
+        {
+            Console.WriteLine("[callback] RequestAttributeOwnershipAssumption: " + objectInstance);
+        }
+
+        public void RequestDivestitureConfirmation(ManagedObjectInstanceHandle objectInstance, IEnumerable<ManagedAttributeHandle> releasedAttributes)
+        {
+            Console.WriteLine("[callback] RequestDivestitureConfirmation: " + objectInstance);
+        }
+
+        public void AttributeOwnershipAcquisitionNotification(ManagedObjectInstanceHandle objectInstance, IEnumerable<ManagedAttributeHandle> securedAttributes, byte[] userSuppliedTag)
+        {
+            Console.WriteLine("[callback] AttributeOwnershipAcquisitionNotification: " + objectInstance);
+        }
+
+        public void AttributeOwnershipUnavailable(ManagedObjectInstanceHandle objectInstance, IEnumerable<ManagedAttributeHandle> attributes)
+        {
+            Console.WriteLine("[callback] AttributeOwnershipUnavailable: " + objectInstance);
+        }
+
+        public void RequestAttributeOwnershipRelease(ManagedObjectInstanceHandle objectInstance, IEnumerable<ManagedAttributeHandle> candidateAttributes, byte[] userSuppliedTag)
+        {
+            Console.WriteLine("[callback] RequestAttributeOwnershipRelease: " + objectInstance);
+        }
+
+        public void ConfirmAttributeOwnershipAcquisitionCancellation(ManagedObjectInstanceHandle objectInstance, IEnumerable<ManagedAttributeHandle> attributes)
+        {
+            Console.WriteLine("[callback] ConfirmAttributeOwnershipAcquisitionCancellation: " + objectInstance);
+        }
+
+        public void InformAttributeOwnership(ManagedObjectInstanceHandle objectInstance, ManagedAttributeHandle attribute, ManagedFederateHandle owner)
+        {
+            Console.WriteLine("[callback] InformAttributeOwnership: " + objectInstance + " attr=" + attribute + " owner=" + owner);
+        }
+
+        public void AttributeIsNotOwned(ManagedObjectInstanceHandle objectInstance, ManagedAttributeHandle attribute)
+        {
+            Console.WriteLine("[callback] AttributeIsNotOwned: " + objectInstance + " attr=" + attribute);
+        }
+
+        public void AttributeIsOwnedByRTI(ManagedObjectInstanceHandle objectInstance, ManagedAttributeHandle attribute)
+        {
+            Console.WriteLine("[callback] AttributeIsOwnedByRTI: " + objectInstance + " attr=" + attribute);
+        }
+
+        // 4.x federation save/restore (Phase E2)
+        public void InitiateFederateSave(string label)
+        {
+            Console.WriteLine("[callback] InitiateFederateSave: " + label);
+        }
+
+        public void InitiateFederateSave(string label, ManagedHLAfloat64Time time)
+        {
+            Console.WriteLine("[callback] InitiateFederateSave (timestamped): " + label + " @ " + time.Time);
+        }
+
+        public void FederationSaved()
+        {
+            Console.WriteLine("[callback] FederationSaved");
+        }
+
+        public void FederationNotSaved(ManagedSaveFailureReason reason)
+        {
+            Console.WriteLine("[callback] FederationNotSaved: " + reason);
+        }
+
+        public void FederationSaveStatusResponse(IEnumerable<ManagedFederateHandleSaveStatusPair> federateStatusVector)
+        {
+            Console.WriteLine("[callback] FederationSaveStatusResponse");
+        }
+
+        public void RequestFederationRestoreSucceeded(string label)
+        {
+            Console.WriteLine("[callback] RequestFederationRestoreSucceeded: " + label);
+        }
+
+        public void RequestFederationRestoreFailed(string label)
+        {
+            Console.WriteLine("[callback] RequestFederationRestoreFailed: " + label);
+        }
+
+        public void FederationRestoreBegun()
+        {
+            Console.WriteLine("[callback] FederationRestoreBegun");
+        }
+
+        public void InitiateFederateRestore(string label, string federateName, ManagedFederateHandle handle)
+        {
+            Console.WriteLine("[callback] InitiateFederateRestore: " + label + " federate=" + federateName + " (" + handle + ")");
+        }
+
+        public void FederationRestored()
+        {
+            Console.WriteLine("[callback] FederationRestored");
+        }
+
+        public void FederationNotRestored(ManagedRestoreFailureReason reason)
+        {
+            Console.WriteLine("[callback] FederationNotRestored: " + reason);
+        }
+
+        public void FederationRestoreStatusResponse(IEnumerable<ManagedFederateRestoreStatus> federateRestoreStatusVector)
+        {
+            Console.WriteLine("[callback] FederationRestoreStatusResponse");
+        }
     }
 }
