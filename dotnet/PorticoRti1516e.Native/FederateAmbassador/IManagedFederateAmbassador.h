@@ -79,9 +79,14 @@ public enum class ManagedRestoreFailureReason
 public ref class ManagedFederateHandleSaveStatusPair sealed
 {
 public:
+   // Trivial properties (property Type Name; with no explicit backing field) can only
+   // be assigned in the constructor BODY, not via a mem-initializer-list entry like
+   // ": Federate(federate)" - a property is compiler-synthesized get/set methods, not
+   // a plain field, so it cannot appear in an initializer list.
    ManagedFederateHandleSaveStatusPair(ManagedFederateHandle^ federate, ManagedSaveStatus status)
-      : Federate(federate), Status(status)
    {
+      Federate = federate;
+      Status = status;
    }
 
    property ManagedFederateHandle^ Federate;
@@ -93,8 +98,10 @@ public ref class ManagedFederateRestoreStatus sealed
 {
 public:
    ManagedFederateRestoreStatus(ManagedFederateHandle^ preRestoreHandle, ManagedFederateHandle^ postRestoreHandle, ManagedRestoreStatus status)
-      : PreRestoreHandle(preRestoreHandle), PostRestoreHandle(postRestoreHandle), Status(status)
    {
+      PreRestoreHandle = preRestoreHandle;
+      PostRestoreHandle = postRestoreHandle;
+      Status = status;
    }
 
    property ManagedFederateHandle^ PreRestoreHandle;

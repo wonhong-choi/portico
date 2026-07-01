@@ -19,7 +19,12 @@ double ManagedHLAfloat64Time::Time::get()
 
 rti1516e::HLAfloat64Time ManagedHLAfloat64Time::ToNative()
 {
-   return rti1516e::HLAfloat64Time(_time);
+   // HLAfloat64Time's double-taking constructor takes `double const &` (a native
+   // reference), but _time is a field of this ref class and therefore lives on the GC
+   // heap - C++/CLI cannot bind a native reference directly over it. Copy to a native
+   // stack-local first, which can be safely referenced.
+   double time = _time;
+   return rti1516e::HLAfloat64Time(time);
 }
 
 }
