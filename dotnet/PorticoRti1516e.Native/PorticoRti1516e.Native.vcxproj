@@ -76,12 +76,13 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <!--
         /clr is incompatible with /EHsc (ExceptionHandling=Sync) - it requires
-        /EHa (Async). /clr is also incompatible with /std:c++17 or later, so
-        this pins the older stdcpp14 instead of omitting LanguageStandard
-        entirely - the toolset's un-pinned default apparently resolved to a
-        newer mode where _HAS_AUTO_PTR_ETC=1 (below) stopped restoring
-        std::auto_ptr, which RTI/RTIambassadorFactory.h's createRTIambassador()
-        still returns per the (old) IEEE 1516.1 C++ API spec.
+        /EHa (Async). /clr is also incompatible with /std:c++17 or later, so pin
+        the older stdcpp14 explicitly rather than leaving LanguageStandard
+        unset (which risks the toolset default drifting to an incompatible
+        newer standard). stdcpp14 also keeps std::auto_ptr available (it is
+        C++17 that deprecates/removes it) - the RTI headers still use auto_ptr
+        per the old IEEE 1516.1 C++ API. _HAS_AUTO_PTR_ETC=1 (below) additionally
+        forces it on for good measure.
       -->
       <LanguageStandard>stdcpp14</LanguageStandard>
       <ExceptionHandling>Async</ExceptionHandling>
@@ -132,7 +133,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ClInclude Include="Ambassador\AutoPtrCompat.h" />
     <ClInclude Include="Handles\ManagedHandles.h" />
     <ClInclude Include="Types\Marshal.h" />
     <ClInclude Include="Exceptions\PorticoRtiException.h" />

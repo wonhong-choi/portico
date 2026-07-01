@@ -1,5 +1,13 @@
-#include "Marshal.h"
+// <msclr/marshal_cppstd.h> transitively pulls in <windows.h> and Windows COM
+// headers (servprov.h, urlmon.h) that define the native COM ::IServiceProvider.
+// Under /clr, .NET's System::IServiceProvider also exists, and Marshal.h below
+// activates `using namespace System;`. If those COM headers were parsed while
+// System is in scope, the native IServiceProvider collides with the managed one
+// (C2371 redefinition / C3699 "cannot use * on IServiceProvider"). Including the
+// COM-pulling header FIRST - before Marshal.h brings System into scope - lets
+// servprov.h define ::IServiceProvider cleanly in the global namespace.
 #include <msclr/marshal_cppstd.h>
+#include "Marshal.h"
 
 namespace PorticoRti1516e {
 namespace Marshal {

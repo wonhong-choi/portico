@@ -3,18 +3,22 @@
 #include "../Types/Marshal.h"
 #include "../Exceptions/ExceptionTranslation.h"
 
+// The old-style IEEE 1516.1 RTI headers below use std::auto_ptr and std::vector
+// WITHOUT including <memory>/<vector> themselves (e.g. RTIambassador.h declares
+// getTimeFactory() returning std::auto_ptr at line ~1769, and
+// RTIambassadorFactory.h's createRTIambassador() likewise) - they assume the
+// includer has already pulled in the standard library headers. So these MUST come
+// before the <RTI/...> includes. (std::auto_ptr itself is still provided by MSVC's
+// <memory> via _HAS_AUTO_PTR_ETC=1 in the vcxproj - it was never actually removed;
+// the earlier "'auto_ptr' is not a member of 'std'" error was purely this ordering.)
+#include <memory>
+#include <vector>
+#include <string>
+
 #include <RTI/RTIambassador.h>
 #include <RTI/RTIambassadorFactory.h>
 #include <RTI/Enums.h>
 #include <RTI/Typedefs.h>
-#include <memory>
-#include <vector>
-
-// RTI/RTIambassadorFactory.h only forward-declares std::auto_ptr and expects
-// <memory> to supply the definition; recent MSVC STL releases have fully removed
-// it. Must come after the RTI includes above (which forward-declare it) and
-// before createRTIambassador() is called below. See AutoPtrCompat.h for details.
-#include "AutoPtrCompat.h"
 
 using namespace System::Collections::Generic;
 
