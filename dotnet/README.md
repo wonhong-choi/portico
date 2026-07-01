@@ -52,10 +52,11 @@ machine before relying on it.
   Reusable by both the HLA attribute-value path and any future non-HLA
   transport (e.g. TCP/UDP) that also needs `object <-> byte[]`
   conversion - see `PorticoRti1516e.Encoding.Tests/` for xUnit coverage.
-  Like `PorticoRti1516e.Native.TestFederate`, this has not been built or
-  run in the environment it was written in (no `dotnet`/MSBuild toolchain
-  available there); verify with `dotnet build`/`dotnet test` on a properly
-  provisioned machine before relying on it.
+  Unlike `PorticoRti1516e.Native` (Windows/MSVC/`/clr`-only, cannot be
+  built outside Visual Studio), this project is plain net48 with no
+  native/`/clr` dependency, so it *was* actually built and its full test
+  suite run in this repo's dev environment (Linux, via `apt install
+  dotnet-sdk-8.0 mono-complete` + `dotnet test`) - all 117 tests pass.
 
 ## Scope: Phase A + B + C + D + E1 + E2
 
