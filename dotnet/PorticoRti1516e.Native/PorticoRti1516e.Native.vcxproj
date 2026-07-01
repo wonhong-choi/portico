@@ -132,6 +132,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ClInclude Include="Ambassador\AutoPtrCompat.h" />
     <ClInclude Include="Handles\ManagedHandles.h" />
     <ClInclude Include="Types\Marshal.h" />
     <ClInclude Include="Exceptions\PorticoRtiException.h" />

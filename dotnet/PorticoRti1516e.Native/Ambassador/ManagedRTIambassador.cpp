@@ -10,6 +10,12 @@
 #include <memory>
 #include <vector>
 
+// RTI/RTIambassadorFactory.h only forward-declares std::auto_ptr and expects
+// <memory> to supply the definition; recent MSVC STL releases have fully removed
+// it. Must come after the RTI includes above (which forward-declare it) and
+// before createRTIambassador() is called below. See AutoPtrCompat.h for details.
+#include "AutoPtrCompat.h"
+
 using namespace System::Collections::Generic;
 
 namespace PorticoRti1516e {
