@@ -76,10 +76,14 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <!--
         /clr is incompatible with /EHsc (ExceptionHandling=Sync) - it requires
-        /EHa (Async). It is also incompatible with an explicit /std:c++17 (or
-        later) flag, so LanguageStandard is intentionally omitted here; /clr
-        implies its own supported language baseline.
+        /EHa (Async). /clr is also incompatible with /std:c++17 or later, so
+        this pins the older stdcpp14 instead of omitting LanguageStandard
+        entirely - the toolset's un-pinned default apparently resolved to a
+        newer mode where _HAS_AUTO_PTR_ETC=1 (below) stopped restoring
+        std::auto_ptr, which RTI/RTIambassadorFactory.h's createRTIambassador()
+        still returns per the (old) IEEE 1516.1 C++ API spec.
       -->
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <ExceptionHandling>Async</ExceptionHandling>
       <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
@@ -100,8 +104,10 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_HAS_AUTO_PTR_ETC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(PorticoHome)\include\ieee1516e;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <!-- See the Debug config above for why ExceptionHandling=Async and no
-           LanguageStandard are required here (/clr compatibility). -->
+      <!-- See the Debug config above for why ExceptionHandling=Async and
+           LanguageStandard=stdcpp14 are required here (/clr compatibility
+           and std::auto_ptr availability). -->
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <ExceptionHandling>Async</ExceptionHandling>
       <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
