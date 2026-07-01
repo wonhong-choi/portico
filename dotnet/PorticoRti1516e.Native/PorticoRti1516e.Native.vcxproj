@@ -92,7 +92,12 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(PorticoHome)\lib\vc14_3;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>rti1516e64d.lib;fedtime1516e64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <!-- Portico's Windows build (profiles/windows/ieee1516e.xml) emits import
+           libraries WITH a "lib" prefix - librti1516e64(d).lib /
+           libfedtime1516e64(d).lib - exactly as the reference example links them
+           (src/cpp/ieee1516e/example/win64-vc14_3.bat). The "d" suffix is the
+           Debug variant. -->
+      <AdditionalDependencies>librti1516e64d.lib;libfedtime1516e64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
@@ -118,7 +123,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(PorticoHome)\lib\vc14_3;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>rti1516e64.lib;fedtime1516e64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <!-- Release variant of the "lib"-prefixed Portico import libraries (no "d"
+           suffix). See the Debug config above. -->
+      <AdditionalDependencies>librti1516e64.lib;libfedtime1516e64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
