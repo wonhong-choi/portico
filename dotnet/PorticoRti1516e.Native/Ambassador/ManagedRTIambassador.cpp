@@ -61,7 +61,11 @@ namespace {
 }
 
 ManagedRTIambassador::ManagedRTIambassador()
-   : _native(nullptr), _bridge(nullptr), _disposed(false)
+   // _native/_bridge are native (unmanaged) pointers, not managed handles - use NULL
+   // rather than nullptr here. Under /clr, nullptr is CLI's managed null-reference
+   // literal; using it against a native pointer type (especially in a constructor
+   // mem-initializer list) can trigger "the managed nullptr type cannot be used here".
+   : _native(NULL), _bridge(NULL), _disposed(false)
 {
    try
    {
@@ -83,7 +87,7 @@ ManagedRTIambassador::!ManagedRTIambassador()
    // embedded JVM from a finalizer thread. Log loudly so a missing
    // Dispose()/`using` is visible, instead of silently doing native
    // cleanup on a thread the JVM was never attached to.
-   if (_native != nullptr || _bridge != nullptr)
+   if (_native != NULL || _bridge != NULL)
    {
       System::Diagnostics::Debug::WriteLine(
          "PorticoRti1516e.Native: ManagedRTIambassador was finalized without being disposed. "
@@ -100,7 +104,7 @@ void ManagedRTIambassador::ThrowIfDisposed()
 void ManagedRTIambassador::EnsureConnected()
 {
    ThrowIfDisposed();
-   if (_native == nullptr)
+   if (_native == NULL)
       throw gcnew InvalidOperationException("ManagedRTIambassador failed to initialize a native RTIambassador.");
 }
 
@@ -140,7 +144,7 @@ void ManagedRTIambassador::Disconnect()
    RTI_CATCH_AND_RETHROW
 
    delete _bridge;
-   _bridge = nullptr;
+   _bridge = NULL;
 }
 
 void ManagedRTIambassador::CreateFederationExecution(String^ federationExecutionName, String^ fomModule)

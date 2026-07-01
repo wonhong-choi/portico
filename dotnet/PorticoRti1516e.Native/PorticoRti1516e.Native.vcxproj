@@ -74,8 +74,13 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_HAS_AUTO_PTR_ETC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(PorticoHome)\include\ieee1516e;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <ExceptionHandling>Sync</ExceptionHandling>
+      <!--
+        /clr is incompatible with /EHsc (ExceptionHandling=Sync) - it requires
+        /EHa (Async). It is also incompatible with an explicit /std:c++17 (or
+        later) flag, so LanguageStandard is intentionally omitted here; /clr
+        implies its own supported language baseline.
+      -->
+      <ExceptionHandling>Async</ExceptionHandling>
       <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
     <Link>
@@ -95,8 +100,9 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_HAS_AUTO_PTR_ETC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(PorticoHome)\include\ieee1516e;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <ExceptionHandling>Sync</ExceptionHandling>
+      <!-- See the Debug config above for why ExceptionHandling=Async and no
+           LanguageStandard are required here (/clr compatibility). -->
+      <ExceptionHandling>Async</ExceptionHandling>
       <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
     <Link>
