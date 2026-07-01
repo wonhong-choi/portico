@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using PorticoRti1516e;
 
@@ -28,11 +30,12 @@ namespace PorticoRti1516e.Native.TestFederate
     //   14. disconnect
     //   15. dispose
     //
-    // This is unverified, uncompiled reference code: there is no Windows/
-    // MSVC/Portico-distribution toolchain available to build or run it in
-    // this environment. Build it in Visual Studio 2022 against a real
-    // Portico Windows distribution (set PorticoHome, see
-    // PorticoRti1516e.Native.vcxproj) before trusting it.
+    // Build it in Visual Studio 2022 against a real Portico Windows distribution
+    // (set PorticoHome, see PorticoRti1516e.Native.vcxproj). At RUNTIME, set
+    // PORTICO_HOME (or RTI_HOME) to that same distribution so ConfigureNativeSearchPath()
+    // below can put the native RTI DLLs and jvm.dll on the loader's search path -
+    // otherwise loading the C++/CLI PorticoRti1516e.Native.dll fails with a misleading
+    // "not found (or one of its dependencies)" error.
     internal class Program
     {
         private const string FederationName = "ExampleFederation";
@@ -40,6 +43,57 @@ namespace PorticoRti1516e.Native.TestFederate
         private const string FomModule = "testfom.fed"; // matches ExampleCPPFederate.cpp's createFederationExecution call
 
         private static void Main(string[] args)
+        {
+            // CRITICAL: this must run BEFORE any PorticoRti1516e.Native (C++/CLI
+            // mixed-mode) type is touched. The CLR loads Native.dll when a type from it
+            // is first referenced, and at that moment the Windows loader resolves that
+            // DLL's NATIVE imports - librti1516e64(d).dll, libfedtime1516e64(d).dll, and
+            // transitively jvm.dll. If those aren't on the DLL search path, the whole
+            // assembly load fails and .NET misreports it as
+            // "PorticoRti1516e.Native.dll ... not found (or one of its dependencies)"
+            // even though the .dll file itself is right next to the exe.
+            //
+            // Main itself references NO Native type, so JIT-compiling Main does not load
+            // Native.dll. We fix up PATH here, then call RunFederate() - whose JIT (and
+            // therefore the Native.dll load) happens only when it is first invoked, after
+            // PATH is corrected. RunFederate is marked [MethodImpl(NoInlining)] so the JIT
+            // cannot fold it back into Main (which would drag the Native references, and
+            // thus the load, back before this setup runs).
+            ConfigureNativeSearchPath();
+            RunFederate(args);
+        }
+
+        // Prepend the Portico native DLL directories to this process's PATH so the
+        // Windows loader can resolve PorticoRti1516e.Native.dll's native dependencies.
+        // Mirrors what the reference example's win64-vc14_3.bat does with
+        //   set PATH=%RTI_HOME%\jre\bin\server;%RTI_HOME%\bin\vc14_3;%PATH%
+        private static void ConfigureNativeSearchPath()
+        {
+            // PORTICO_HOME (or RTI_HOME, the name the reference example uses) must point
+            // at a Portico Windows distribution containing bin\vc14_3 and jre\bin\server.
+            string porticoHome = Environment.GetEnvironmentVariable("PORTICO_HOME")
+                                 ?? Environment.GetEnvironmentVariable("RTI_HOME");
+
+            if (string.IsNullOrEmpty(porticoHome))
+            {
+                Console.WriteLine("WARNING: neither PORTICO_HOME nor RTI_HOME is set. The native RTI " +
+                                  "DLLs and jvm.dll will likely not be found, and loading " +
+                                  "PorticoRti1516e.Native.dll will fail.");
+                return;
+            }
+
+            string nativeBin = Path.Combine(porticoHome, "bin", "vc14_3");
+            string jvmBin = Path.Combine(porticoHome, "jre", "bin", "server");
+            string existingPath = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+
+            // jvm.dll dir first, then the RTI DLL dir, then whatever was already there -
+            // same ordering as the example batch file.
+            string newPath = jvmBin + Path.PathSeparator + nativeBin + Path.PathSeparator + existingPath;
+            Environment.SetEnvironmentVariable("PATH", newPath);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void RunFederate(string[] args)
         {
             var federateName = args.Length > 0 ? args[0] : "csharpFederate";
 
