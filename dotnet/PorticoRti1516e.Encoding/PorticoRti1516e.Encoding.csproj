@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <Nullable>disable</Nullable>
+    <AssemblyName>PorticoRti1516e.Encoding</AssemblyName>
+    <RootNamespace>PorticoRti1516e.Encoding</RootNamespace>
+  </PropertyGroup>
+
+</Project>

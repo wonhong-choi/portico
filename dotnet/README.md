@@ -42,6 +42,20 @@ machine before relying on it.
   not exercised by this test federate - `ExampleCPPFederate.cpp`'s own
   `runFederate()` doesn't use those services either, so there's no
   reference call sequence to port.
+- `PorticoRti1516e.Encoding/` - a **separate, pure C# class library with no
+  dependency on `PorticoRti1516e.Native` or any native/RTI code**: an IEEE
+  1516.2-style binary data-encoding library (`IDataElement`/`ByteWrapper`/
+  primitives/`HLAfixedRecord`/`HLAfixedArray<T>`/`HLAvariableArray<T>`,
+  plus an attribute-driven `HLASerializer` for POCO <-> `byte[]`
+  conversion), ported from the design of
+  `codebase/src/java/portico/org/portico/impl/hla1516e/types/encoding/`.
+  Reusable by both the HLA attribute-value path and any future non-HLA
+  transport (e.g. TCP/UDP) that also needs `object <-> byte[]`
+  conversion - see `PorticoRti1516e.Encoding.Tests/` for xUnit coverage.
+  Like `PorticoRti1516e.Native.TestFederate`, this has not been built or
+  run in the environment it was written in (no `dotnet`/MSBuild toolchain
+  available there); verify with `dotnet build`/`dotnet test` on a properly
+  provisioned machine before relying on it.
 
 ## Scope: Phase A + B + C + D + E1 + E2
 

@@ -7,6 +7,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PorticoRti1516e.Native", "P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PorticoRti1516e.Native.TestFederate", "PorticoRti1516e.Native.TestFederate\PorticoRti1516e.Native.TestFederate.csproj", "{F29D620B-BFA9-4EF0-91EB-70916F38B3C4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PorticoRti1516e.Encoding", "PorticoRti1516e.Encoding\PorticoRti1516e.Encoding.csproj", "{CEA23CF2-F9CE-4F0F-9604-DA715FD55028}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PorticoRti1516e.Encoding.Tests", "PorticoRti1516e.Encoding.Tests\PorticoRti1516e.Encoding.Tests.csproj", "{FF943CB3-5C24-491F-91AC-F0637F2AC962}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +25,14 @@ Global
 		{F29D620B-BFA9-4EF0-91EB-70916F38B3C4}.Debug|x64.Build.0 = Debug|x64
 		{F29D620B-BFA9-4EF0-91EB-70916F38B3C4}.Release|x64.ActiveCfg = Release|x64
 		{F29D620B-BFA9-4EF0-91EB-70916F38B3C4}.Release|x64.Build.0 = Release|x64
+		{CEA23CF2-F9CE-4F0F-9604-DA715FD55028}.Debug|x64.ActiveCfg = Debug|x64
+		{CEA23CF2-F9CE-4F0F-9604-DA715FD55028}.Debug|x64.Build.0 = Debug|x64
+		{CEA23CF2-F9CE-4F0F-9604-DA715FD55028}.Release|x64.ActiveCfg = Release|x64
+		{CEA23CF2-F9CE-4F0F-9604-DA715FD55028}.Release|x64.Build.0 = Release|x64
+		{FF943CB3-5C24-491F-91AC-F0637F2AC962}.Debug|x64.ActiveCfg = Debug|x64
+		{FF943CB3-5C24-491F-91AC-F0637F2AC962}.Debug|x64.Build.0 = Debug|x64
+		{FF943CB3-5C24-491F-91AC-F0637F2AC962}.Release|x64.ActiveCfg = Release|x64
+		{FF943CB3-5C24-491F-91AC-F0637F2AC962}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
