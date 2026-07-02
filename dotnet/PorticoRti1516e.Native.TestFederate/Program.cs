@@ -177,34 +177,42 @@ namespace PorticoRti1516e.Native.TestFederate
                 Console.WriteLine("Registered, object instance handle = " + objectInstanceHandle);
 
                 double federateTime = 0.0;
-                var sendTime = new ManagedHLAfloat64Time(federateTime + lookahead);
 
-                Console.WriteLine("Updating attribute values (timestamped)...");
-                var attributeValues = new Dictionary<ManagedAttributeHandle, byte[]>
+                // Main loop: 20 iterations of update-attributes + send-interaction +
+                // advance-time, matching ExampleCPPFederate::runFederate()'s loop. Each
+                // iteration streams a fresh set of values so a subscribing federate (e.g.
+                // the WPF receiver) has continuous real-time data to display.
+                const int iterationCount = 20;
+                for (int i = 0; i < iterationCount; i++)
                 {
-                    { aaHandle, Encoding.ASCII.GetBytes("aa:" + DateTime.UtcNow.Ticks) },
-                    { abHandle, Encoding.ASCII.GetBytes("ab:" + DateTime.UtcNow.Ticks) },
-                    { acHandle, Encoding.ASCII.GetBytes("ac:" + DateTime.UtcNow.Ticks) },
-                };
-                rtiAmb.UpdateAttributeValues(objectInstanceHandle, attributeValues, Encoding.ASCII.GetBytes("Hi!"), sendTime);
+                    var sendTime = new ManagedHLAfloat64Time(federateTime + lookahead);
 
-                Console.WriteLine("Sending an InteractionRoot.X interaction (timestamped)...");
-                var parameterValues = new Dictionary<ManagedParameterHandle, byte[]>
-                {
-                    { xaHandle, Encoding.ASCII.GetBytes("xa:" + DateTime.UtcNow.Ticks) },
-                    { xbHandle, Encoding.ASCII.GetBytes("xb:" + DateTime.UtcNow.Ticks) },
-                };
-                rtiAmb.SendInteraction(interactionClassHandle, parameterValues, Encoding.ASCII.GetBytes("Hi!"), sendTime);
+                    Console.WriteLine("[" + (i + 1) + "/" + iterationCount + "] Updating attribute values (timestamped)...");
+                    var attributeValues = new Dictionary<ManagedAttributeHandle, byte[]>
+                    {
+                        { aaHandle, Encoding.ASCII.GetBytes("aa:" + i + ":" + DateTime.UtcNow.Ticks) },
+                        { abHandle, Encoding.ASCII.GetBytes("ab:" + i + ":" + DateTime.UtcNow.Ticks) },
+                        { acHandle, Encoding.ASCII.GetBytes("ac:" + i + ":" + DateTime.UtcNow.Ticks) },
+                    };
+                    rtiAmb.UpdateAttributeValues(objectInstanceHandle, attributeValues, Encoding.ASCII.GetBytes("Hi!"), sendTime);
 
-                federateTime += 1.0; // timestep, matches ExampleCPPFederate::advanceTime's caller
-                Console.WriteLine("Requesting time advance to " + federateTime + "...");
-                fedAmb.IsAdvancing = true;
-                rtiAmb.TimeAdvanceRequest(new ManagedHLAfloat64Time(federateTime));
-                while (fedAmb.IsAdvancing)
-                {
-                    rtiAmb.EvokeMultipleCallbacks(0.1, 1.0);
+                    Console.WriteLine("[" + (i + 1) + "/" + iterationCount + "] Sending an InteractionRoot.X interaction (timestamped)...");
+                    var parameterValues = new Dictionary<ManagedParameterHandle, byte[]>
+                    {
+                        { xaHandle, Encoding.ASCII.GetBytes("xa:" + i + ":" + DateTime.UtcNow.Ticks) },
+                        { xbHandle, Encoding.ASCII.GetBytes("xb:" + i + ":" + DateTime.UtcNow.Ticks) },
+                    };
+                    rtiAmb.SendInteraction(interactionClassHandle, parameterValues, Encoding.ASCII.GetBytes("Hi!"), sendTime);
+
+                    federateTime += 1.0; // timestep, matches ExampleCPPFederate::advanceTime's caller
+                    fedAmb.IsAdvancing = true;
+                    rtiAmb.TimeAdvanceRequest(new ManagedHLAfloat64Time(federateTime));
+                    while (fedAmb.IsAdvancing)
+                    {
+                        rtiAmb.EvokeMultipleCallbacks(0.1, 1.0);
+                    }
+                    Console.WriteLine("Time advanced to " + fedAmb.FederateTime);
                 }
-                Console.WriteLine("Time advanced to " + fedAmb.FederateTime);
 
                 Console.WriteLine("Deleting the object instance...");
                 rtiAmb.DeleteObjectInstance(objectInstanceHandle, null);

@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PorticoRti1516e.Encoding", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PorticoRti1516e.Encoding.Tests", "PorticoRti1516e.Encoding.Tests\PorticoRti1516e.Encoding.Tests.csproj", "{FF943CB3-5C24-491F-91AC-F0637F2AC962}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PorticoRti1516e.Native.WpfReceiver", "PorticoRti1516e.Native.WpfReceiver\PorticoRti1516e.Native.WpfReceiver.csproj", "{4903CF60-761D-4B91-AC19-F627CA3FFE8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -33,6 +35,10 @@ Global
 		{FF943CB3-5C24-491F-91AC-F0637F2AC962}.Debug|x64.Build.0 = Debug|x64
 		{FF943CB3-5C24-491F-91AC-F0637F2AC962}.Release|x64.ActiveCfg = Release|x64
 		{FF943CB3-5C24-491F-91AC-F0637F2AC962}.Release|x64.Build.0 = Release|x64
+		{4903CF60-761D-4B91-AC19-F627CA3FFE8C}.Debug|x64.ActiveCfg = Debug|x64
+		{4903CF60-761D-4B91-AC19-F627CA3FFE8C}.Debug|x64.Build.0 = Debug|x64
+		{4903CF60-761D-4B91-AC19-F627CA3FFE8C}.Release|x64.ActiveCfg = Release|x64
+		{4903CF60-761D-4B91-AC19-F627CA3FFE8C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
