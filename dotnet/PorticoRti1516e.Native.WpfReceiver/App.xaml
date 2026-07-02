@@ -1,9 +1,7 @@
 <Application x:Class="PorticoRti1516e.Native.WpfReceiver.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- No StartupUri: App.OnStartup configures the native DLL search path first, THEN
-         creates and shows MainWindow, so nothing touches PorticoRti1516e.Native before
-         the path is set up. -->
+    <!-- No StartupUri: App.OnStartup creates and shows MainWindow in code. -->
     <Application.Resources>
     </Application.Resources>
 </Application>

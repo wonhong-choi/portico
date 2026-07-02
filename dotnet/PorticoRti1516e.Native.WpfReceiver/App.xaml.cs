@@ -8,11 +8,8 @@ namespace PorticoRti1516e.Native.WpfReceiver
         {
             base.OnStartup(e);
 
-            // Fix up the native DLL search path BEFORE MainWindow (which eventually loads
-            // the C++/CLI PorticoRti1516e.Native.dll) is created. NativeLoader references
-            // no Native type, so this call does not itself trigger the load.
-            NativeLoader.ConfigureNativeSearchPath();
-
+            // The native RTI DLL / jvm.dll search path is expected to be set up externally
+            // (VS Debug Environment, system PATH, or a launch script) before this app runs.
             new MainWindow().Show();
         }
     }

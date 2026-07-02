@@ -65,20 +65,20 @@ machine before relying on it.
   screen. All RTI work runs on one dedicated background thread (HLA_EVOKED);
   callbacks are marshaled onto the WPF Dispatcher. Run it and the
   TestFederate together against the same `portico.jar` to watch data flow
-  end to end. Same runtime setup as the TestFederate (below): set
-  `PORTICO_HOME`, put the native DLLs and `testfom.fed` where they can be
-  found.
+  end to end. Same runtime setup as the TestFederate (below).
 
 ## Running the TestFederate / WpfReceiver
 
 Both are C++/CLI-backed and need a Portico Windows distribution at runtime:
 
-1. Set `PORTICO_HOME` (or `RTI_HOME`) to a Portico Windows distribution.
-   Both apps prepend `%PORTICO_HOME%\bin\vc14_3` (native RTI DLLs) and
-   `%PORTICO_HOME%\jre\bin\server` (`jvm.dll`) to `PATH` at startup so the
-   Windows loader can resolve `PorticoRti1516e.Native.dll`'s native
-   dependencies - without this you get a misleading
-   "PorticoRti1516e.Native.dll not found (or one of its dependencies)".
+1. Put the native RTI DLLs (`<distribution>\bin\vc14_3`) and `jvm.dll`
+   (`<distribution>\jre\bin\server`) on the DLL search path so the Windows
+   loader can resolve `PorticoRti1516e.Native.dll`'s native dependencies -
+   set this up externally (the VS Debug tab's Environment, a system `PATH`
+   entry, or a launch script; e.g.
+   `set PATH=<dist>\jre\bin\server;<dist>\bin\vc14_3;%PATH%`). Without it you
+   get a misleading "PorticoRti1516e.Native.dll not found (or one of its
+   dependencies)".
 2. Copy `codebase/src/cpp/ieee1516e/example/testfom.fed` next to each exe
    (both call `CreateFederationExecution` with that FOM file name).
 3. Build/run in the **same configuration whose native RTI DLLs your
