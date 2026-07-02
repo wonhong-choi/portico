@@ -47,12 +47,32 @@ namespace PorticoRti1516e.Native.WpfReceiver
         public void SetAttributeNames(IDictionary<ManagedAttributeHandle, string> map) => _attributeNames = map;
         public void SetParameterNames(IDictionary<ManagedParameterHandle, string> map) => _parameterNames = map;
 
+        // Runs a callback body without ever letting an exception escape back into the
+        // native RTI/JVM code that invoked us. Under /clr, a managed exception unwinding
+        // through native frames (Portico's evoke/JNI stack) can terminate the whole
+        // process, so every callback that does real work funnels through here.
+        private void Safe(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                try { _log("Callback error: " + ex.GetType().Name + ": " + ex.Message); }
+                catch { /* logging must not throw either */ }
+            }
+        }
+
         // ---- Object discovery ------------------------------------------------------
 
         public void DiscoverObjectInstance(ManagedObjectInstanceHandle objectInstance, ManagedObjectClassHandle objectClass, string objectInstanceName)
         {
-            _objectNames[objectInstance] = objectInstanceName;
-            _log("Discovered object instance: " + objectInstanceName);
+            Safe(() =>
+            {
+                _objectNames[objectInstance] = objectInstanceName;
+                _log("Discovered object instance: " + objectInstanceName);
+            });
         }
 
         // ---- Attribute reflection (all three overloads funnel into one handler) -----
@@ -74,16 +94,19 @@ namespace PorticoRti1516e.Native.WpfReceiver
 
         private void HandleReflect(ManagedObjectInstanceHandle objectInstance, IDictionary<ManagedAttributeHandle, byte[]> attributeValues)
         {
-            string objectName = _objectNames.TryGetValue(objectInstance, out var name) ? name : objectInstance.ToString();
-
-            var readable = new Dictionary<string, string>();
-            foreach (var kv in attributeValues)
+            Safe(() =>
             {
-                string attrName = _attributeNames.TryGetValue(kv.Key, out var an) ? an : kv.Key.ToString();
-                readable[attrName] = Decode(kv.Value);
-            }
+                string objectName = _objectNames.TryGetValue(objectInstance, out var name) ? name : objectInstance.ToString();
 
-            _onReflect(objectName, readable);
+                var readable = new Dictionary<string, string>();
+                foreach (var kv in attributeValues)
+                {
+                    string attrName = _attributeNames.TryGetValue(kv.Key, out var an) ? an : kv.Key.ToString();
+                    readable[attrName] = Decode(kv.Value);
+                }
+
+                _onReflect(objectName, readable);
+            });
         }
 
         // ---- Interaction receipt (all three overloads funnel into one handler) ------
@@ -105,14 +128,17 @@ namespace PorticoRti1516e.Native.WpfReceiver
 
         private void HandleReceive(IDictionary<ManagedParameterHandle, byte[]> parameterValues)
         {
-            var readable = new Dictionary<string, string>();
-            foreach (var kv in parameterValues)
+            Safe(() =>
             {
-                string paramName = _parameterNames.TryGetValue(kv.Key, out var pn) ? pn : kv.Key.ToString();
-                readable[paramName] = Decode(kv.Value);
-            }
+                var readable = new Dictionary<string, string>();
+                foreach (var kv in parameterValues)
+                {
+                    string paramName = _parameterNames.TryGetValue(kv.Key, out var pn) ? pn : kv.Key.ToString();
+                    readable[paramName] = Decode(kv.Value);
+                }
 
-            _onInteraction(readable);
+                _onInteraction(readable);
+            });
         }
 
         // The TestFederate sends attribute/parameter payloads as raw ASCII bytes
@@ -144,9 +170,12 @@ namespace PorticoRti1516e.Native.WpfReceiver
 
         private void LogRemove(ManagedObjectInstanceHandle objectInstance)
         {
-            string objectName = _objectNames.TryGetValue(objectInstance, out var name) ? name : objectInstance.ToString();
-            _objectNames.Remove(objectInstance);
-            _log("Object instance removed: " + objectName);
+            Safe(() =>
+            {
+                string objectName = _objectNames.TryGetValue(objectInstance, out var name) ? name : objectInstance.ToString();
+                _objectNames.Remove(objectInstance);
+                _log("Object instance removed: " + objectName);
+            });
         }
 
         // ---- Federation-management / lifecycle callbacks (informational) -----------
