@@ -8,7 +8,13 @@ ManagedHLAfloat64Time::ManagedHLAfloat64Time(double time)
 }
 
 ManagedHLAfloat64Time::ManagedHLAfloat64Time(rti1516e::LogicalTime const & native)
-   : _time(rti1516e::HLAfloat64Time(native).getTime())
+   // Use dynamic_cast to reinterpret the existing LogicalTime as an HLAfloat64Time,
+   // exactly as the reference example does (ExampleFedAmb::convertTime). Do NOT construct
+   // a new HLAfloat64Time from the LogicalTime via HLAfloat64Time(LogicalTime const&) -
+   // that constructor recurses infinitely in Portico's build and blows the stack
+   // (observed as a StackOverflowException the moment timeRegulationEnabled fires),
+   // which is presumably why the example avoids it too.
+   : _time(dynamic_cast<rti1516e::HLAfloat64Time const &>(native).getTime())
 {
 }
 
