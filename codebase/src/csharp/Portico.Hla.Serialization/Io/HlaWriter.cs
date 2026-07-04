@@ -156,6 +156,39 @@ namespace Portico.Hla.Serialization.Io
         /// <summary>HLAboolean: 4-byte big-endian int, 1=true / 0=false.</summary>
         public void WriteBoolean(bool value) => WriteInt32BE(value ? 1 : 0);
 
+        // ---- strings ------------------------------------------------------------------------
+
+        /// <summary>
+        /// HLAASCIIstring: 4-byte big-endian length (character count) followed by one byte per
+        /// character (low 8 bits, Latin-1). No terminator. A null value is encoded as empty.
+        /// </summary>
+        public void WriteAsciiString(string value)
+        {
+            if (value == null)
+                value = string.Empty;
+
+            WriteInt32BE(value.Length);
+            EnsureCapacity(value.Length);
+            for (int i = 0; i < value.Length; i++)
+                _buffer[_length++] = (byte)value[i];
+        }
+
+        /// <summary>
+        /// HLAunicodeString: 4-byte big-endian unit count (1 + character count, the +1 is the BOM),
+        /// then a 2-byte big-endian BOM (0xFEFF), then each character as a 2-byte big-endian
+        /// UTF-16 code unit. A null value is encoded as empty (unit count 1, BOM only).
+        /// </summary>
+        public void WriteUnicodeString(string value)
+        {
+            if (value == null)
+                value = string.Empty;
+
+            WriteInt32BE(1 + value.Length);
+            WriteInt16BE(unchecked((short)0xFEFF));
+            for (int i = 0; i < value.Length; i++)
+                WriteInt16BE((short)value[i]);
+        }
+
         // ---- helpers ------------------------------------------------------------------------
 
         /// <summary>

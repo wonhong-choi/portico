@@ -35,6 +35,11 @@ namespace Portico.Hla.Serialization.Codecs
             Register("HLAbyte", typeof(byte), "WriteByte", "ReadByte");
             Register("HLAoctet", typeof(byte), "WriteOctet", "ReadOctet");
             Register("HLAunicodeChar", typeof(char), "WriteUnicodeChar", "ReadUnicodeChar");
+
+            // variable-length strings (still a single Write/Read pair, so they ride the
+            // primitive member path even though the wire form is length-prefixed)
+            Register("HLAASCIIstring", typeof(string), "WriteAsciiString", "ReadAsciiString");
+            Register("HLAunicodeString", typeof(string), "WriteUnicodeString", "ReadUnicodeString");
         }
 
         private static void Register(string hlaName, Type clrType, string writeMethod, string readMethod)

@@ -21,6 +21,10 @@ namespace Portico.Hla.Serialization.Tests
             NestedRecordAttribute();
             EndiannessDiffers();
             PartialUpdateLeavesDefaults();
+            AsciiStringGolden();
+            UnicodeStringGolden();
+            PrimitiveArrayGolden();
+            CollectionsRoundTrip();
             PerformanceHotPath();
 
             Console.WriteLine();
@@ -138,7 +142,95 @@ namespace Portico.Hla.Serialization.Tests
             Assert("partial update leaves Pos null", back.Pos == null);
         }
 
-        // 7. Hot path (after emit) is dramatically faster than the first (cold) call.
+        // 7. HLAASCIIstring golden layout: 4-byte BE length + one byte per char.
+        private static void AsciiStringGolden()
+        {
+            var obj = new SampleCollections { Name = "AB" };
+            byte[] name = HlaSerializer.Serialize(obj)["name"];
+
+            byte[] expected = { 0x00, 0x00, 0x00, 0x02, 0x41, 0x42 };
+            Assert("ASCII string 'AB' == [len=2][41 42]", BytesEqual(name, expected));
+
+            var back = HlaSerializer.Deserialize<SampleCollections>(
+                new Dictionary<string, byte[]> { ["name"] = name });
+            Assert("ASCII string round-trip", back.Name == "AB");
+
+            // empty string => length 0, no bytes
+            byte[] empty = HlaSerializer.Serialize(new SampleCollections { Name = "" })["name"];
+            Assert("empty ASCII string is 4 bytes", empty.Length == 4);
+        }
+
+        // 8. HLAunicodeString golden layout: 4-byte BE (1+chars) + BOM + UTF-16BE chars.
+        private static void UnicodeStringGolden()
+        {
+            var obj = new SampleCollections { Label = "AB" };
+            byte[] label = HlaSerializer.Serialize(obj)["label"];
+
+            byte[] expected =
+            {
+                0x00, 0x00, 0x00, 0x03, // unit count = 1 (BOM) + 2 chars
+                0xFE, 0xFF,             // BOM
+                0x00, 0x41,             // 'A'
+                0x00, 0x42              // 'B'
+            };
+            Assert("Unicode string 'AB' matches BOM+UTF16BE layout", BytesEqual(label, expected));
+
+            var back = HlaSerializer.Deserialize<SampleCollections>(
+                new Dictionary<string, byte[]> { ["label"] = label });
+            Assert("Unicode string round-trip", back.Label == "AB");
+
+            byte[] empty = HlaSerializer.Serialize(new SampleCollections { Label = "" })["label"];
+            Assert("empty Unicode string is 6 bytes (len + BOM)", empty.Length == 6);
+        }
+
+        // 9. Primitive array golden layout: 4-byte BE count + concatenated elements, no padding.
+        private static void PrimitiveArrayGolden()
+        {
+            var obj = new SampleCollections { Samples = new[] { 1.0, 2.0 } };
+            byte[] samples = HlaSerializer.Serialize(obj)["samples"];
+
+            byte[] expected = new byte[4 + 16];
+            WriteInt32BE(expected, 0, 2);
+            WriteDoubleBE(expected, 4, 1.0);
+            WriteDoubleBE(expected, 12, 2.0);
+            Assert("double[] {1,2} == [count=2][1.0 BE][2.0 BE] (20 bytes)",
+                samples.Length == 20 && BytesEqual(samples, expected));
+        }
+
+        // 10. Full round-trip across strings, primitive array, int list, and record list.
+        private static void CollectionsRoundTrip()
+        {
+            var obj = new SampleCollections
+            {
+                Name = "hello",
+                Label = "héllo",
+                Samples = new[] { 1.5, -2.5, 3.5 },
+                Ids = new List<int> { 10, 20, 30 },
+                Points = new List<Position>
+                {
+                    new Position { X = 1, Y = 2, Count = 3 },
+                    new Position { X = 4, Y = 5, Count = 6 }
+                }
+            };
+
+            IDictionary<string, byte[]> map = HlaSerializer.Serialize(obj);
+
+            // points: 4-byte count + 2 * 20-byte records
+            Assert("record list 'points' is 44 bytes", map["points"].Length == 4 + 2 * 20);
+            // ids: 4-byte count + 3 * 4-byte ints
+            Assert("int list 'ids' is 16 bytes", map["ids"].Length == 4 + 3 * 4);
+
+            var back = HlaSerializer.Deserialize<SampleCollections>(new Dictionary<string, byte[]>(map));
+            Assert("collections round-trip Name", back.Name == "hello");
+            Assert("collections round-trip Label", back.Label == "héllo");
+            Assert("collections round-trip Samples length", back.Samples != null && back.Samples.Length == 3);
+            Assert("collections round-trip Samples[1]", back.Samples[1] == -2.5);
+            Assert("collections round-trip Ids", back.Ids != null && back.Ids.Count == 3 && back.Ids[2] == 30);
+            Assert("collections round-trip Points count", back.Points != null && back.Points.Count == 2);
+            Assert("collections round-trip Points[1].Count", back.Points[1].Count == 6);
+        }
+
+        // 11. Hot path (after emit) is dramatically faster than the first (cold) call.
         private static void PerformanceHotPath()
         {
             HlaSerializer.Prepare(typeof(Position));

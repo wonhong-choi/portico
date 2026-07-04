@@ -136,6 +136,49 @@ namespace Portico.Hla.Serialization.Io
 
         public bool ReadBoolean() => ReadInt32BE() != 0;
 
+        // ---- strings ------------------------------------------------------------------------
+
+        /// <summary>HLAASCIIstring: 4-byte BE length + that many raw bytes (one char each).</summary>
+        public string ReadAsciiString()
+        {
+            int length = ReadInt32BE();
+            if (length < 0)
+                throw new HlaEncodingException("Negative ASCII string length: " + length);
+
+            Require(length);
+            var chars = new char[length];
+            for (int i = 0; i < length; i++)
+                chars[i] = (char)(_buffer[_position++] & 0xFF);
+            return new string(chars);
+        }
+
+        /// <summary>
+        /// HLAunicodeString: 4-byte BE unit count (1 + char count, including the leading BOM),
+        /// then the BOM and UTF-16 big-endian code units. The BOM unit is skipped.
+        /// </summary>
+        public string ReadUnicodeString()
+        {
+            int length = ReadInt32BE(); // number of 16-bit units, BOM included
+            if (length < 0)
+                throw new HlaEncodingException("Negative unicode string length: " + length);
+            if (length == 0)
+                return string.Empty;
+
+            Require(length * 2);
+            _position += 2; // skip the BOM unit
+
+            int charCount = length - 1;
+            var chars = new char[charCount];
+            for (int i = 0; i < charCount; i++)
+            {
+                int hi = _buffer[_position] & 0xFF;
+                int lo = _buffer[_position + 1] & 0xFF;
+                chars[i] = (char)((hi << 8) | lo);
+                _position += 2;
+            }
+            return new string(chars);
+        }
+
         // ---- helpers ------------------------------------------------------------------------
 
         /// <summary>.NET Framework 4.8 lacks BitConverter.Int32BitsToSingle.</summary>

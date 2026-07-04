@@ -33,6 +33,23 @@ namespace Portico.Hla.Serialization.Metadata
         /// <summary>Set when this member is a nested [HLARecord] type.</summary>
         public Type RecordType { get; set; }
 
+        // ---- collection members (T[] or List<T>), encoded as a count-prefixed array ---------
+
+        /// <summary>True when this member is an array / list of <see cref="ElementClrType"/>.</summary>
+        public bool IsArray { get; set; }
+
+        /// <summary>True for List&lt;T&gt;/IList&lt;T&gt; members; false for T[] members.</summary>
+        public bool IsList { get; set; }
+
+        /// <summary>Element CLR type (T) for a collection member.</summary>
+        public Type ElementClrType { get; set; }
+
+        /// <summary>
+        /// Element FOM datatype name for a collection member (a primitive name), or null when the
+        /// element is a nested [HLARecord].
+        /// </summary>
+        public string ElementDataType { get; set; }
+
         public bool IsPrimitive => Primitive != null;
     }
 

@@ -26,6 +26,14 @@ namespace Portico.Hla.Serialization.Emit
                 BindingFlags.Public | BindingFlags.Static, null,
                 new[] { typeof(Type), typeof(HlaReader) }, null);
 
+        private static readonly MethodInfo WriteArrayMethod =
+            typeof(SerializerRuntime).GetMethod(nameof(SerializerRuntime.WriteArray),
+                BindingFlags.Public | BindingFlags.Static);
+
+        private static readonly MethodInfo ReadArrayMethod =
+            typeof(SerializerRuntime).GetMethod(nameof(SerializerRuntime.ReadArray),
+                BindingFlags.Public | BindingFlags.Static);
+
         private static readonly MethodInfo GetTypeFromHandle =
             typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle),
                 BindingFlags.Public | BindingFlags.Static);
@@ -128,7 +136,19 @@ namespace Portico.Hla.Serialization.Emit
         {
             MethodInfo getter = member.Property.GetGetMethod(true);
 
-            if (member.IsPrimitive)
+            if (member.IsArray)
+            {
+                // SerializerRuntime.WriteArray( ((Owner)obj).Getter, writer, typeof(Elem), elemDataType )
+                EmitLdarg(il, objArg);
+                il.Emit(OpCodes.Castclass, ownerType);
+                il.Emit(OpCodes.Callvirt, getter);
+                EmitLdarg(il, writerArg);
+                il.Emit(OpCodes.Ldtoken, member.ElementClrType);
+                il.Emit(OpCodes.Call, GetTypeFromHandle);
+                EmitDataTypeString(il, member.ElementDataType);
+                il.Emit(OpCodes.Call, WriteArrayMethod);
+            }
+            else if (member.IsPrimitive)
             {
                 // writer.WriteXxx( ((Owner)obj).Getter )
                 EmitLdarg(il, writerArg);
@@ -153,7 +173,20 @@ namespace Portico.Hla.Serialization.Emit
         {
             MethodInfo setter = member.Property.GetSetMethod(true);
 
-            if (member.IsPrimitive)
+            if (member.IsArray)
+            {
+                // owner.SetXxx( (PropType) SerializerRuntime.ReadArray(reader, typeof(Elem), elemDataType, isList) )
+                loadOwner();
+                EmitLdarg(il, readerArg);
+                il.Emit(OpCodes.Ldtoken, member.ElementClrType);
+                il.Emit(OpCodes.Call, GetTypeFromHandle);
+                EmitDataTypeString(il, member.ElementDataType);
+                il.Emit(member.IsList ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+                il.Emit(OpCodes.Call, ReadArrayMethod);
+                il.Emit(OpCodes.Castclass, member.Property.PropertyType);
+                il.Emit(OpCodes.Callvirt, setter);
+            }
+            else if (member.IsPrimitive)
             {
                 // owner.SetXxx( reader.ReadXxx() )
                 loadOwner();
@@ -172,6 +205,14 @@ namespace Portico.Hla.Serialization.Emit
                 il.Emit(OpCodes.Castclass, member.RecordType);
                 il.Emit(OpCodes.Callvirt, setter);
             }
+        }
+
+        private static void EmitDataTypeString(ILGenerator il, string dataType)
+        {
+            if (dataType == null)
+                il.Emit(OpCodes.Ldnull);
+            else
+                il.Emit(OpCodes.Ldstr, dataType);
         }
 
         private static void EmitLdarg(ILGenerator il, int index)

@@ -164,6 +164,18 @@ namespace Portico.Hla.Serialization.Metadata
                 Order = order
             };
 
+            // Collection members (T[] / List<T>) are detected first: here 'dataType' names the
+            // ELEMENT datatype, so the scalar-primitive check below would otherwise misfire.
+            if (TryGetElementType(property.PropertyType, out Type elementType, out bool isList))
+            {
+                ValidateElement(owner, property, elementType, dataType);
+                binding.IsArray = true;
+                binding.IsList = isList;
+                binding.ElementClrType = elementType;
+                binding.ElementDataType = PrimitiveCodecRegistry.IsPrimitive(dataType) ? dataType : null;
+                return binding;
+            }
+
             PrimitiveCodec primitive = PrimitiveCodecRegistry.Find(dataType);
             if (primitive != null)
             {
@@ -191,6 +203,63 @@ namespace Portico.Hla.Serialization.Metadata
 
             binding.RecordType = memberType;
             return binding;
+        }
+
+        /// <summary>
+        /// Recognizes single-rank arrays and the common generic list/collection interfaces as
+        /// collection members. Deserialization materializes T[] for arrays and List&lt;T&gt; for the
+        /// generic forms (assignable to all the supported interfaces).
+        /// </summary>
+        private static bool TryGetElementType(Type propertyType, out Type elementType, out bool isList)
+        {
+            elementType = null;
+            isList = false;
+
+            if (propertyType.IsArray && propertyType.GetArrayRank() == 1)
+            {
+                elementType = propertyType.GetElementType();
+                isList = false;
+                return true;
+            }
+
+            if (propertyType.IsGenericType)
+            {
+                Type def = propertyType.GetGenericTypeDefinition();
+                if (def == typeof(List<>) || def == typeof(IList<>) || def == typeof(ICollection<>)
+                    || def == typeof(IEnumerable<>) || def == typeof(IReadOnlyList<>)
+                    || def == typeof(IReadOnlyCollection<>))
+                {
+                    elementType = propertyType.GetGenericArguments()[0];
+                    isList = true;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void ValidateElement(Type owner, PropertyInfo property, Type elementType, string dataType)
+        {
+            PrimitiveCodec elementPrimitive = PrimitiveCodecRegistry.Find(dataType);
+            if (elementPrimitive != null)
+            {
+                if (elementType != elementPrimitive.ClrType)
+                {
+                    throw new HlaEncodingException(
+                        $"Collection '{owner.Name}.{property.Name}' has elements of {elementType.Name} but " +
+                        $"element datatype '{dataType}' requires {elementPrimitive.ClrType.Name}.");
+                }
+                return;
+            }
+
+            if (elementType.GetCustomAttribute<HLARecordAttribute>() == null)
+            {
+                string hint = string.IsNullOrEmpty(dataType)
+                    ? "no element DataType was given and the element type is not an [HLARecord]"
+                    : $"element DataType '{dataType}' is not a known primitive and the element type is not an [HLARecord]";
+                throw new HlaEncodingException(
+                    $"Cannot map collection '{owner.Name}.{property.Name}': {hint}.");
+            }
         }
 
         private static void RequireDefaultConstructible(Type type)

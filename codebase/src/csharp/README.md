@@ -58,12 +58,22 @@ Aircraft a = HlaSerializer.Deserialize<Aircraft>(receivedNameToBytes);
   serialize/deserialize delegates; subsequent calls invoke the cached delegates with no
   reflection. Call `HlaSerializer.Prepare(type)` at startup to pay that cost up front.
 
-## v1 scope
+## Supported datatypes
 
-Supported: fixed primitives + nested `[HLARecord]` (reference types with a parameterless ctor).
-Deferred to v2: variable arrays / `List<T>`, `HLAASCIIstring` / `HLAunicodeString`, value-type
-(struct) records, and a generic zero-boxing API. `HLAvariantRecord` is intentionally unsupported
-(Portico's C++ `HLAvariantRecord::encodeInto` is unimplemented).
+- **Fixed primitives**: `HLAfloat64BE/LE`, `HLAfloat32BE/LE`, `HLAinteger16/32/64BE/LE`,
+  `HLAboolean` (4-byte BE int), `HLAbyte`, `HLAoctet`, `HLAunicodeChar`.
+- **Strings**: `HLAASCIIstring` (4-byte BE length + one byte/char) and `HLAunicodeString`
+  (4-byte BE unit-count + BOM `0xFEFF` + UTF-16BE). Map to a `string` property; null encodes as empty.
+- **Nested records**: `[HLARecord]` reference types with a parameterless ctor.
+- **Arrays / lists**: `T[]`, `List<T>`, and the common `IList<T>`/`ICollection<T>`/`IEnumerable<T>`
+  interfaces, where `T` is a primitive or a nested record. Encoded as `4-byte BE count` + elements,
+  matching Portico's `HLAvariableArray`/`HLAfixedArray`. For a collection member, `DataType` names the
+  **element** datatype (omit it when the element is a record). Deserialization materializes `T[]`
+  for arrays and `List<T>` for the generic forms.
+
+Deferred: value-type (struct) records and a generic zero-boxing API (`HlaSerializer<T>`).
+`HLAvariantRecord` is intentionally unsupported (Portico's C++ `HLAvariantRecord::encodeInto`
+is unimplemented).
 
 ## Building & verifying
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Portico.Hla.Serialization.Attributes;
 
 namespace Portico.Hla.Serialization.Tests
@@ -29,5 +30,20 @@ namespace Portico.Hla.Serialization.Tests
     {
         [HLAParameter(Name = "xa", DataType = "HLAinteger16BE")] public short Xa { get; set; }
         [HLAParameter(Name = "xb", DataType = "HLAfloat32LE")] public float Xb { get; set; }
+    }
+
+    /// <summary>Object class exercising v2 features: strings, primitive arrays, and record lists.</summary>
+    [HLAObjectClass(Name = "ObjectRoot.B")]
+    public class SampleCollections
+    {
+        [HLAAttribute(Name = "name", DataType = "HLAASCIIstring")] public string Name { get; set; }
+        [HLAAttribute(Name = "label", DataType = "HLAunicodeString")] public string Label { get; set; }
+
+        // For arrays/lists, DataType names the ELEMENT datatype.
+        [HLAAttribute(Name = "samples", DataType = "HLAfloat64BE")] public double[] Samples { get; set; }
+        [HLAAttribute(Name = "ids", DataType = "HLAinteger32BE")] public List<int> Ids { get; set; }
+
+        // Array of nested records (no DataType => element CLR type is an [HLARecord]).
+        [HLAAttribute(Name = "points")] public List<Position> Points { get; set; }
     }
 }
