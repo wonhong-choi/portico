@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>Portico.Hla.Serialization</AssemblyName>
+    <RootNamespace>Portico.Hla.Serialization</RootNamespace>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Nullable>disable</Nullable>
+    <!-- No third-party dependencies: only BCL is referenced. -->
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>Portico.Hla.Serialization.Tests</AssemblyName>
+    <RootNamespace>Portico.Hla.Serialization.Tests</RootNamespace>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Portico.Hla.Serialization\Portico.Hla.Serialization.csproj" />
+  </ItemGroup>
+
+</Project>
