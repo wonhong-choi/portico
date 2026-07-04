@@ -143,15 +143,32 @@ namespace Portico.Hla.Serialization.Tests
         {
             HlaSerializer.Prepare(typeof(Position));
 
+            const int iterations = 1_000_000;
             var pos = new Position { X = 1, Y = 2, Count = 3 };
-            var sw = Stopwatch.StartNew();
-            for (int i = 0; i < 1_000_000; i++)
+
+            // serialize hot path
+            var swSer = Stopwatch.StartNew();
+            for (int i = 0; i < iterations; i++)
             {
                 byte[] b = HlaSerializer.SerializeRecord(pos);
                 if (b.Length != 20) { Assert("perf loop length", false); return; }
             }
-            sw.Stop();
-            Console.WriteLine($"  [info] 1,000,000 record serializations in {sw.ElapsedMilliseconds} ms");
+            swSer.Stop();
+
+            // deserialize hot path
+            byte[] encoded = HlaSerializer.SerializeRecord(pos);
+            int checksum = 0;
+            var swDes = Stopwatch.StartNew();
+            for (int i = 0; i < iterations; i++)
+            {
+                var back = HlaSerializer.DeserializeRecord<Position>(encoded);
+                checksum += back.Count; // consume the result so the JIT cannot elide the loop
+            }
+            swDes.Stop();
+
+            Console.WriteLine($"  [info] {iterations:N0} record serializations   in {swSer.ElapsedMilliseconds} ms");
+            Console.WriteLine($"  [info] {iterations:N0} record deserializations in {swDes.ElapsedMilliseconds} ms");
+            Assert("deserialize perf loop produced expected values", checksum == iterations * 3);
             Assert("perf loop completed", true);
         }
 
