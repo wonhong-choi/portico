@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{5FEB7A81-F57D-43D1-8CD2-456074373566}</ProjectGuid>
+    <RootNamespace>PorticoRti1516eNative</RootNamespace>
+    <Keyword>ManagedCProj</Keyword>
+    <CLRSupport>true</CLRSupport>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <!--
+      PorticoHome must point at a pre-built Portico Windows distribution (or
+      `ant sandbox` output) that contains:
+        $(PorticoHome)\include\ieee1516e   (RTI/*.h headers)
+        $(PorticoHome)\lib\vc14_3          (rti1516e64(d).lib, fedtime1516e64(d).lib)
+        $(PorticoHome)\bin\vc14_3          (rti1516e64(d).dll, fedtime1516e64(d).dll)
+      Override it on the command line (/p:PorticoHome=...), via an environment
+      variable, or in a local PorticoRti1516e.Native.props file (untracked)
+      imported below. This project does not build or depend on the Ant
+      codebase build in any way - it only needs these output paths.
+    -->
+    <PorticoHome Condition="'$(PorticoHome)'==''">$(PORTICO_HOME)</PorticoHome>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PorticoRti1516e.Native.props" Condition="exists('PorticoRti1516e.Native.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PorticoRti1516e.Native.props" Condition="exists('PorticoRti1516e.Native.props')" />
+  </ImportGroup>
+
+  <PropertyGroup Label="UserMacros" />
+
+  <PropertyGroup>
+    <TargetName>PorticoRti1516e.Native</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_HAS_AUTO_PTR_ETC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(PorticoHome)\include\ieee1516e;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <!--
+        /clr is incompatible with /EHsc (ExceptionHandling=Sync) - it requires
+        /EHa (Async). /clr is also incompatible with /std:c++17 or later, so pin
+        the older stdcpp14 explicitly rather than leaving LanguageStandard
+        unset (which risks the toolset default drifting to an incompatible
+        newer standard). stdcpp14 also keeps std::auto_ptr available (it is
+        C++17 that deprecates/removes it) - the RTI headers still use auto_ptr
+        per the old IEEE 1516.1 C++ API. _HAS_AUTO_PTR_ETC=1 (below) additionally
+        forces it on for good measure.
+      -->
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <SupportJustMyCode>false</SupportJustMyCode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(PorticoHome)\lib\vc14_3;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <!-- Portico's Windows build (profiles/windows/ieee1516e.xml) emits import
+           libraries WITH a "lib" prefix - librti1516e64(d).lib /
+           libfedtime1516e64(d).lib - exactly as the reference example links them
+           (src/cpp/ieee1516e/example/win64-vc14_3.bat). The "d" suffix is the
+           Debug variant. -->
+      <AdditionalDependencies>librti1516e64d.lib;libfedtime1516e64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_HAS_AUTO_PTR_ETC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(PorticoHome)\include\ieee1516e;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <!-- See the Debug config above for why ExceptionHandling=Async and
+           LanguageStandard=stdcpp14 are required here (/clr compatibility
+           and std::auto_ptr availability). -->
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <SupportJustMyCode>false</SupportJustMyCode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(PorticoHome)\lib\vc14_3;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <!-- Release variant of the "lib"-prefixed Portico import libraries (no "d"
+           suffix). See the Debug config above. -->
+      <AdditionalDependencies>librti1516e64.lib;libfedtime1516e64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <!--
+      /clr auto-references mscorlib.dll only (String, List<T>, Dictionary<K,V>,
+      Exception, etc. all live there). System::Diagnostics::Debug (used in
+      ManagedRTIambassador's finalizer) lives in System.dll instead, which needs
+      an explicit reference like any other .NET assembly.
+    -->
+    <Reference Include="System" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClInclude Include="Handles\ManagedHandles.h" />
+    <ClInclude Include="Types\Marshal.h" />
+    <ClInclude Include="Exceptions\PorticoRtiException.h" />
+    <ClInclude Include="Exceptions\ExceptionTranslation.h" />
+    <ClInclude Include="FederateAmbassador\IManagedFederateAmbassador.h" />
+    <ClInclude Include="FederateAmbassador\NativeFederateAmbassadorBridge.h" />
+    <ClInclude Include="Ambassador\ManagedRTIambassador.h" />
+    <ClInclude Include="Time\ManagedHLAfloat64Time.h" />
+    <ClInclude Include="Time\ManagedHLAfloat64Interval.h" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="Handles\ManagedHandles.cpp" />
+    <ClCompile Include="Types\Marshal.cpp" />
+    <ClCompile Include="Exceptions\PorticoRtiException.cpp" />
+    <ClCompile Include="FederateAmbassador\NativeFederateAmbassadorBridge.cpp" />
+    <ClCompile Include="Ambassador\ManagedRTIambassador.cpp" />
+    <ClCompile Include="Time\ManagedHLAfloat64Time.cpp" />
+    <ClCompile Include="Time\ManagedHLAfloat64Interval.cpp" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

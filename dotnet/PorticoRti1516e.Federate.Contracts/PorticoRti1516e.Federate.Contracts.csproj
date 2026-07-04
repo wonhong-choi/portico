@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>PorticoRti1516e.Federate.Contracts</AssemblyName>
+    <RootNamespace>PorticoRti1516e.Federate.Contracts</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The serializer lives in the codebase/ tree; referenced across trees by relative path. -->
+    <ProjectReference Include="..\..\codebase\src\csharp\Portico.Hla.Serialization\Portico.Hla.Serialization.csproj" />
+  </ItemGroup>
+
+</Project>
