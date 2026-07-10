@@ -12,8 +12,9 @@ namespace Portico.Hla.Serialization
     ///
     /// Two shapes are supported:
     ///  - Object classes / interactions: each mapped member encodes to its own byte[], keyed by
-    ///    FOM name. Feed the resulting map to the C++/CLI wrapper's AttributeHandleValueMap /
-    ///    ParameterHandleValueMap (resolve FOM name -&gt; handle there).
+    ///    member name (the attribute's Name, or the CLR property name if Name is omitted). Feed the
+    ///    resulting map to the C++/CLI wrapper's AttributeHandleValueMap / ParameterHandleValueMap
+    ///    (resolve name -&gt; handle there).
     ///  - Records: a single POCO encodes to one byte[] (used for a record-typed attribute value).
     ///
     /// The byte layout reproduces Portico's encoding exactly (no alignment padding).
@@ -24,9 +25,10 @@ namespace Portico.Hla.Serialization
 
         /// <summary>
         /// Encode an [HLAObjectClass] or [HLAInteractionClass] instance to a map of
-        /// { FOM member name -&gt; encoded bytes }, one entry per mapped attribute/parameter.
+        /// { member name -&gt; encoded bytes }, one entry per mapped attribute/parameter. The key is
+        /// the attribute's Name, or the CLR property name when Name is omitted.
         /// </summary>
-        public static IDictionary<string, byte[]> Serialize(object instance)
+        public static IDictionary<string, byte[]> ToDictionary(object instance)
         {
             if (instance == null)
                 throw new ArgumentNullException(nameof(instance));
@@ -46,10 +48,10 @@ namespace Portico.Hla.Serialization
 
         /// <summary>
         /// Decode an [HLAObjectClass]/[HLAInteractionClass] instance from a map of
-        /// { FOM member name -&gt; encoded bytes }. Members absent from the map are left at their
+        /// { member name -&gt; encoded bytes }. Members absent from the map are left at their
         /// default (supports partial attribute updates).
         /// </summary>
-        public static object Deserialize(Type type, IReadOnlyDictionary<string, byte[]> values)
+        public static object FromDictionary(Type type, IReadOnlyDictionary<string, byte[]> values)
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
@@ -68,10 +70,10 @@ namespace Portico.Hla.Serialization
             return instance;
         }
 
-        /// <summary>Generic convenience overload of <see cref="Deserialize(Type,IReadOnlyDictionary{string,byte[]})"/>.</summary>
-        public static T Deserialize<T>(IReadOnlyDictionary<string, byte[]> values)
+        /// <summary>Generic convenience overload of <see cref="FromDictionary(Type,IReadOnlyDictionary{string,byte[]})"/>.</summary>
+        public static T FromDictionary<T>(IReadOnlyDictionary<string, byte[]> values)
         {
-            return (T)Deserialize(typeof(T), values);
+            return (T)FromDictionary(typeof(T), values);
         }
 
         // ---- records ------------------------------------------------------------------------

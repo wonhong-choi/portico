@@ -38,17 +38,29 @@ namespace Portico.Hla.Serialization.Metadata
         /// <summary>True when this member is an array / list of <see cref="ElementClrType"/>.</summary>
         public bool IsArray { get; set; }
 
-        /// <summary>True for List&lt;T&gt;/IList&lt;T&gt; members; false for T[] members.</summary>
+        /// <summary>True for List&lt;T&gt;/IList&lt;T&gt; members; false for T[] members. For 2-D, the outer form.</summary>
         public bool IsList { get; set; }
 
-        /// <summary>Element CLR type (T) for a collection member.</summary>
+        /// <summary>Innermost element CLR type (T) for a collection member.</summary>
         public Type ElementClrType { get; set; }
 
         /// <summary>
-        /// Element FOM datatype name for a collection member (a primitive name), or null when the
-        /// element is a nested [HLARecord].
+        /// Innermost element FOM datatype name for a collection member (a primitive name), or null
+        /// when the element is a nested [HLARecord].
         /// </summary>
         public string ElementDataType { get; set; }
+
+        /// <summary>
+        /// Array cardinality. Null → variable array (count-prefixed). <c>[N]</c> → fixed 1-D array
+        /// of N (pad/truncate). <c>[N1, N2]</c> → fixed 2-D array over a nested collection.
+        /// </summary>
+        public int[] Dimensions { get; set; }
+
+        /// <summary>True when this member is a fixed 2-D array (<see cref="ElementClrType"/> is the inner T).</summary>
+        public bool Is2D { get; set; }
+
+        /// <summary>For a 2-D member: true when the inner collection materializes as List&lt;T&gt; (vs T[]).</summary>
+        public bool InnerIsList { get; set; }
 
         public bool IsPrimitive => Primitive != null;
     }

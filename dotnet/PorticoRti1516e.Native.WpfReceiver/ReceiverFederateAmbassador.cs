@@ -102,7 +102,7 @@ namespace PorticoRti1516e.Native.WpfReceiver
 
                 // handle -> byte[]  =>  fomName -> byte[]  =>  deserialize into the shared POCO.
                 var nameBytes = HlaHandleCodec.ToNameMap(attributeValues, _attributeNames);
-                var entity = HlaSerializer.Deserialize<EntityStateObject>(nameBytes);
+                var entity = HlaSerializer.FromDictionary<EntityStateObject>(nameBytes);
 
                 // A reflect may carry only a subset of attributes, so display only the
                 // attribute names that actually arrived (the rest are POCO defaults).
@@ -147,7 +147,7 @@ namespace PorticoRti1516e.Native.WpfReceiver
             Safe(() =>
             {
                 var nameBytes = HlaHandleCodec.ToNameMap(parameterValues, _parameterNames);
-                var interaction = HlaSerializer.Deserialize<XInteraction>(nameBytes);
+                var interaction = HlaSerializer.FromDictionary<XInteraction>(nameBytes);
 
                 var readable = new Dictionary<string, string>();
                 foreach (var paramName in nameBytes.Keys)

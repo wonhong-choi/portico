@@ -123,57 +123,113 @@ namespace Portico.Hla.Serialization.Emit
         private static readonly ConcurrentDictionary<ArrayCodecKey, ArrayCodec> ArrayCache =
             new ConcurrentDictionary<ArrayCodecKey, ArrayCodec>();
 
-        /// <summary>Encode a collection member: 4-byte BE count then each element. Invoked by generated IL.</summary>
-        public static void WriteArray(object collection, HlaWriter writer, Type elementType, string elementDataType)
+        /// <summary>
+        /// Encode a collection member. <paramref name="kind"/>: 0 = variable 1-D, 1 = fixed 1-D,
+        /// 2 = fixed 2-D. Fixed forms normalize the collection to the declared size (pad with a
+        /// default element / truncate) and, like Portico's HLAfixedArray, still carry a 4-byte BE
+        /// count prefix at each level. Invoked by generated IL.
+        /// </summary>
+        public static void WriteArrayMember(object collection, HlaWriter writer, Type elementType,
+            string elementDataType, int kind, int size1, int size2)
         {
             ArrayCodec codec = GetArrayCodec(elementType, elementDataType);
 
-            if (collection == null)
+            if (kind == 2)
             {
-                writer.WriteCount(0);
+                IList outer = AsList(collection);
+                writer.WriteCount(size1);
+                for (int i = 0; i < size1; i++)
+                {
+                    IList inner = AsList(outer != null && i < outer.Count ? outer[i] : null);
+                    writer.WriteCount(size2);
+                    for (int j = 0; j < size2; j++)
+                    {
+                        object element = inner != null && j < inner.Count
+                            ? inner[j]
+                            : DefaultElement(elementType, elementDataType);
+                        codec.ElementEncode(element, writer);
+                    }
+                }
                 return;
             }
 
-            if (collection is Array array)
+            IList list = AsList(collection);
+            int actual = list?.Count ?? 0;
+
+            if (kind == 1)
             {
-                writer.WriteCount(array.Length);
-                for (int i = 0; i < array.Length; i++)
-                    codec.ElementEncode(array.GetValue(i), writer);
+                writer.WriteCount(size1);
+                for (int i = 0; i < size1; i++)
+                {
+                    object element = i < actual ? list[i] : DefaultElement(elementType, elementDataType);
+                    codec.ElementEncode(element, writer);
+                }
                 return;
             }
 
-            if (collection is IList list)
-            {
-                writer.WriteCount(list.Count);
-                for (int i = 0; i < list.Count; i++)
-                    codec.ElementEncode(list[i], writer);
-                return;
-            }
-
-            if (collection is IEnumerable enumerable)
-            {
-                var items = new List<object>();
-                foreach (object item in enumerable)
-                    items.Add(item);
-                writer.WriteCount(items.Count);
-                foreach (object item in items)
-                    codec.ElementEncode(item, writer);
-                return;
-            }
-
-            throw new HlaEncodingException(
-                $"Cannot encode collection of type '{collection.GetType().FullName}'.");
+            // variable
+            writer.WriteCount(actual);
+            for (int i = 0; i < actual; i++)
+                codec.ElementEncode(list[i], writer);
         }
 
-        /// <summary>Decode a collection member into a T[] or List&lt;T&gt;. Invoked by generated IL.</summary>
-        public static object ReadArray(HlaReader reader, Type elementType, string elementDataType, bool asList)
+        /// <summary>
+        /// Decode a collection member. Mirrors <see cref="WriteArrayMember"/>: fixed forms validate
+        /// the decoded count against the declared size (Portico throws on mismatch). Materializes
+        /// T[]/List&lt;T&gt; (and, for 2-D, the nested collection). Invoked by generated IL.
+        /// </summary>
+        public static object ReadArrayMember(HlaReader reader, Type elementType, string elementDataType,
+            int kind, int size1, int size2, bool outerAsList, bool innerAsList)
         {
             ArrayCodec codec = GetArrayCodec(elementType, elementDataType);
+
+            if (kind == 2)
+            {
+                int outerCount = reader.ReadCount();
+                if (outerCount != size1)
+                    throw new HlaEncodingException(
+                        $"Fixed 2-D array outer length mismatch. Expected {size1}, got {outerCount}.");
+
+                Type innerCollType = innerAsList
+                    ? typeof(List<>).MakeGenericType(elementType)
+                    : elementType.MakeArrayType();
+
+                if (outerAsList)
+                {
+                    Type outerType = typeof(List<>).MakeGenericType(innerCollType);
+                    var outer = (IList)Activator.CreateInstance(outerType, outerCount);
+                    for (int i = 0; i < outerCount; i++)
+                        outer.Add(ReadInner(reader, codec, elementType, size2, innerAsList));
+                    return outer;
+                }
+                else
+                {
+                    Array outer = Array.CreateInstance(innerCollType, outerCount);
+                    for (int i = 0; i < outerCount; i++)
+                        outer.SetValue(ReadInner(reader, codec, elementType, size2, innerAsList), i);
+                    return outer;
+                }
+            }
 
             int count = reader.ReadCount();
             if (count < 0)
                 throw new HlaEncodingException("Negative array length: " + count);
+            if (kind == 1 && count != size1)
+                throw new HlaEncodingException($"Fixed array length mismatch. Expected {size1}, got {count}.");
 
+            return ReadElements(reader, codec, elementType, count, outerAsList);
+        }
+
+        private static object ReadInner(HlaReader reader, ArrayCodec codec, Type elementType, int expected, bool asList)
+        {
+            int count = reader.ReadCount();
+            if (count != expected)
+                throw new HlaEncodingException($"Fixed 2-D array inner length mismatch. Expected {expected}, got {count}.");
+            return ReadElements(reader, codec, elementType, count, asList);
+        }
+
+        private static object ReadElements(HlaReader reader, ArrayCodec codec, Type elementType, int count, bool asList)
+        {
             if (asList)
             {
                 Type listType = typeof(List<>).MakeGenericType(elementType);
@@ -187,6 +243,33 @@ namespace Portico.Hla.Serialization.Emit
             for (int i = 0; i < count; i++)
                 array.SetValue(codec.ElementDecode(reader), i);
             return array;
+        }
+
+        /// <summary>Adapt any supported collection to a random-access IList (arrays and lists already are).</summary>
+        private static IList AsList(object collection)
+        {
+            if (collection == null)
+                return null;
+            if (collection is IList list)
+                return list;
+            if (collection is IEnumerable enumerable)
+            {
+                var materialized = new List<object>();
+                foreach (object item in enumerable)
+                    materialized.Add(item);
+                return materialized;
+            }
+            throw new HlaEncodingException($"Cannot encode collection of type '{collection.GetType().FullName}'.");
+        }
+
+        /// <summary>The padding element for fixed arrays: default(T) for primitives, a fresh instance for records.</summary>
+        private static object DefaultElement(Type elementType, string elementDataType)
+        {
+            // Records (no primitive datatype) must be a real instance; SerializeRecordInto rejects null.
+            if (elementDataType == null)
+                return Activator.CreateInstance(elementType);
+            // Primitive value types → default(T); string (reference) → null, which encodes as empty.
+            return elementType.IsValueType ? Activator.CreateInstance(elementType) : null;
         }
 
         private static ArrayCodec GetArrayCodec(Type elementType, string elementDataType)

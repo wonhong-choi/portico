@@ -11,6 +11,11 @@ namespace Portico.Hla.Serialization.Metadata
     /// Reflects a POCO once, validates its HLA mapping attributes, and produces a
     /// <see cref="TypeDescriptor"/>. All CLR/HLA type mismatches are caught here (fail fast),
     /// so the emitted IL never has to guard against them.
+    ///
+    /// The FOM datatype for each member is inferred from its CLR type; endianness (per member,
+    /// defaulting to the class setting, defaulting to Big) and the string encoding are supplied
+    /// by the mapping attributes. Members are keyed by name (object/interaction) or ordered by
+    /// property declaration order via <c>MetadataToken</c> (records).
     /// </summary>
     public static class MetadataBuilder
     {
@@ -44,51 +49,62 @@ namespace Portico.Hla.Serialization.Metadata
             RequireDefaultConstructible(type);
 
             if (objectAttr != null)
-                return BuildObjectOrInteraction(type, HlaTypeKind.ObjectClass, objectAttr.Name);
+                return BuildObjectOrInteraction(type, HlaTypeKind.ObjectClass, objectAttr.Name,
+                    ClassEndianness(objectAttr.Endianness));
             if (interactionAttr != null)
-                return BuildObjectOrInteraction(type, HlaTypeKind.InteractionClass, interactionAttr.Name);
-            return BuildRecord(type, recordAttr.Name);
+                return BuildObjectOrInteraction(type, HlaTypeKind.InteractionClass, interactionAttr.Name,
+                    ClassEndianness(interactionAttr.Endianness));
+            return BuildRecord(type, recordAttr.Name, ClassEndianness(recordAttr.Endianness));
         }
 
-        private static TypeDescriptor BuildObjectOrInteraction(Type type, HlaTypeKind kind, string hlaName)
+        /// <summary>A class-level Inherit means the HLA default, big-endian.</summary>
+        private static Endianness ClassEndianness(Endianness declared) =>
+            declared == Endianness.Inherit ? Endianness.Big : declared;
+
+        private static Endianness Effective(Endianness member, Endianness classDefault) =>
+            member == Endianness.Inherit ? classDefault : member;
+
+        private static TypeDescriptor BuildObjectOrInteraction(Type type, HlaTypeKind kind, string hlaName,
+            Endianness classEndianness)
         {
             var members = new List<MemberBinding>();
             var seenNames = new HashSet<string>(StringComparer.Ordinal);
 
             foreach (PropertyInfo property in type.GetProperties(PropertyFlags))
             {
-                string dataType;
                 string memberName;
+                Endianness endianness;
+                StringEncoding stringEncoding;
+                int[] dimensions;
 
                 if (kind == HlaTypeKind.ObjectClass)
                 {
                     var attr = property.GetCustomAttribute<HLAAttributeAttribute>();
                     if (attr == null)
                         continue;
-                    memberName = attr.Name;
-                    dataType = attr.DataType;
+                    memberName = string.IsNullOrEmpty(attr.Name) ? property.Name : attr.Name;
+                    endianness = Effective(attr.Endianness, classEndianness);
+                    stringEncoding = attr.StringEncoding;
+                    dimensions = attr.Dimensions;
                 }
                 else
                 {
                     var attr = property.GetCustomAttribute<HLAParameterAttribute>();
                     if (attr == null)
                         continue;
-                    memberName = attr.Name;
-                    dataType = attr.DataType;
+                    memberName = string.IsNullOrEmpty(attr.Name) ? property.Name : attr.Name;
+                    endianness = Effective(attr.Endianness, classEndianness);
+                    stringEncoding = attr.StringEncoding;
+                    dimensions = attr.Dimensions;
                 }
 
-                if (string.IsNullOrEmpty(memberName))
-                {
-                    throw new HlaEncodingException(
-                        $"Property '{type.Name}.{property.Name}' must specify a non-empty Name.");
-                }
                 if (!seenNames.Add(memberName))
                 {
                     throw new HlaEncodingException(
                         $"Duplicate HLA member name '{memberName}' on type '{type.FullName}'.");
                 }
 
-                members.Add(BuildMember(type, property, dataType, order: 0, memberName));
+                members.Add(BuildMember(type, property, endianness, stringEncoding, dimensions, order: 0, memberName));
             }
 
             if (members.Count == 0)
@@ -106,30 +122,23 @@ namespace Portico.Hla.Serialization.Metadata
             };
         }
 
-        private static TypeDescriptor BuildRecord(Type type, string hlaName)
+        private static TypeDescriptor BuildRecord(Type type, string hlaName, Endianness classEndianness)
         {
+            // Record fields are concatenated in property declaration order. CLR reflection does
+            // not guarantee GetProperties order, so we sort by MetadataToken (declaration order).
+            var fields = type.GetProperties(PropertyFlags)
+                .Select(p => new { Property = p, Field = p.GetCustomAttribute<HLAFieldAttribute>() })
+                .Where(x => x.Field != null)
+                .OrderBy(x => x.Property.MetadataToken)
+                .ToList();
+
             var members = new List<MemberBinding>();
-            var seenOrders = new HashSet<int>();
-
-            foreach (PropertyInfo property in type.GetProperties(PropertyFlags))
+            for (int order = 0; order < fields.Count; order++)
             {
-                var field = property.GetCustomAttribute<HLAFieldAttribute>();
-                if (field == null)
-                    continue;
-
-                if (field.Order < 0)
-                {
-                    throw new HlaEncodingException(
-                        $"Record field '{type.Name}.{property.Name}' must specify Order >= 0. " +
-                        "CLR reflection does not guarantee property order, so Order is required.");
-                }
-                if (!seenOrders.Add(field.Order))
-                {
-                    throw new HlaEncodingException(
-                        $"Duplicate HLAField Order {field.Order} on record '{type.FullName}'.");
-                }
-
-                members.Add(BuildMember(type, property, field.DataType, field.Order, hlaName: null));
+                var f = fields[order];
+                Endianness endianness = Effective(f.Field.Endianness, classEndianness);
+                members.Add(BuildMember(type, f.Property, endianness, f.Field.StringEncoding,
+                    f.Field.Dimensions, order, hlaName: null));
             }
 
             if (members.Count == 0)
@@ -138,18 +147,17 @@ namespace Portico.Hla.Serialization.Metadata
                     $"Record '{type.FullName}' declares no [HLAField] properties.");
             }
 
-            MemberBinding[] ordered = members.OrderBy(m => m.Order).ToArray();
             return new TypeDescriptor
             {
                 ClrType = type,
                 Kind = HlaTypeKind.Record,
                 HlaName = hlaName ?? type.Name,
-                Members = ordered
+                Members = members.ToArray()
             };
         }
 
-        private static MemberBinding BuildMember(Type owner, PropertyInfo property, string dataType,
-            int order, string hlaName)
+        private static MemberBinding BuildMember(Type owner, PropertyInfo property, Endianness endianness,
+            StringEncoding stringEncoding, int[] dimensions, int order, string hlaName)
         {
             if (property.GetGetMethod(true) == null || property.GetSetMethod(true) == null)
             {
@@ -164,45 +172,99 @@ namespace Portico.Hla.Serialization.Metadata
                 Order = order
             };
 
-            // Collection members (T[] / List<T>) are detected first: here 'dataType' names the
-            // ELEMENT datatype, so the scalar-primitive check below would otherwise misfire.
-            if (TryGetElementType(property.PropertyType, out Type elementType, out bool isList))
+            int rank = dimensions?.Length ?? 0;
+            if (rank > 2)
             {
-                ValidateElement(owner, property, elementType, dataType);
-                binding.IsArray = true;
-                binding.IsList = isList;
-                binding.ElementClrType = elementType;
-                binding.ElementDataType = PrimitiveCodecRegistry.IsPrimitive(dataType) ? dataType : null;
-                return binding;
+                throw new HlaEncodingException(
+                    $"Member '{owner.Name}.{property.Name}' declares {rank} Dimensions; only 1-D and 2-D arrays are supported.");
             }
 
-            PrimitiveCodec primitive = PrimitiveCodecRegistry.Find(dataType);
-            if (primitive != null)
+            bool outerIsCollection = TryGetElementType(property.PropertyType, out Type outerElem, out bool outerIsList);
+
+            if (!outerIsCollection)
             {
-                if (property.PropertyType != primitive.ClrType)
+                if (rank != 0)
                 {
                     throw new HlaEncodingException(
-                        $"Property '{owner.Name}.{property.Name}' is {property.PropertyType.Name} but " +
-                        $"datatype '{dataType}' requires {primitive.ClrType.Name}.");
+                        $"Member '{owner.Name}.{property.Name}' has Dimensions but its type is not a collection.");
                 }
-                binding.Primitive = primitive;
+                BuildScalarOrRecord(owner, property, property.PropertyType, endianness, stringEncoding, binding);
                 return binding;
             }
 
-            // Not a known primitive: the property's CLR type must itself be a nested record.
-            Type memberType = property.PropertyType;
-            if (memberType.GetCustomAttribute<HLARecordAttribute>() == null)
+            bool innerIsCollection = TryGetElementType(outerElem, out Type innerElem, out bool innerIsList);
+
+            if (rank == 2)
             {
-                string hint = string.IsNullOrEmpty(dataType)
-                    ? "no DataType was given and its CLR type is not an [HLARecord]"
-                    : $"DataType '{dataType}' is not a known primitive and its CLR type is not an [HLARecord]";
-                throw new HlaEncodingException(
-                    $"Cannot map property '{owner.Name}.{property.Name}': {hint}. " +
-                    "(v1 supports primitives and nested [HLARecord] types; arrays/strings are v2.)");
+                if (!innerIsCollection)
+                {
+                    throw new HlaEncodingException(
+                        $"Member '{owner.Name}.{property.Name}' declares 2 Dimensions but is not a nested " +
+                        "collection (expected List<List<T>> or T[][]).");
+                }
+                binding.IsArray = true;
+                binding.Is2D = true;
+                binding.IsList = outerIsList;
+                binding.InnerIsList = innerIsList;
+                binding.Dimensions = dimensions;
+                binding.ElementClrType = innerElem;
+                binding.ElementDataType = ResolveElementDataType(owner, property, innerElem, endianness, stringEncoding);
+                return binding;
             }
 
-            binding.RecordType = memberType;
+            // 1-D (rank 0 → variable, rank 1 → fixed). A nested collection here is ambiguous.
+            if (innerIsCollection)
+            {
+                throw new HlaEncodingException(
+                    $"Member '{owner.Name}.{property.Name}' is a nested collection; declare Dimensions " +
+                    "with two entries (e.g. new[] {{ 32, 128 }}) for a fixed 2-D array.");
+            }
+
+            binding.IsArray = true;
+            binding.Is2D = false;
+            binding.IsList = outerIsList;
+            binding.Dimensions = rank == 1 ? dimensions : null;
+            binding.ElementClrType = outerElem;
+            binding.ElementDataType = ResolveElementDataType(owner, property, outerElem, endianness, stringEncoding);
             return binding;
+        }
+
+        private static void BuildScalarOrRecord(Type owner, PropertyInfo property, Type clrType,
+            Endianness endianness, StringEncoding stringEncoding, MemberBinding binding)
+        {
+            PrimitiveCodec primitive = PrimitiveCodecRegistry.ResolveScalar(clrType, stringEncoding, endianness);
+            if (primitive != null)
+            {
+                binding.Primitive = primitive;
+                return;
+            }
+
+            if (clrType.GetCustomAttribute<HLARecordAttribute>() == null)
+            {
+                throw new HlaEncodingException(
+                    $"Cannot map property '{owner.Name}.{property.Name}': its type '{clrType.Name}' is neither a " +
+                    "supported basic type nor an [HLARecord].");
+            }
+
+            binding.RecordType = clrType;
+        }
+
+        /// <summary>Resolve a collection element's concrete datatype name, or null when it is a record.</summary>
+        private static string ResolveElementDataType(Type owner, PropertyInfo property, Type elementType,
+            Endianness endianness, StringEncoding stringEncoding)
+        {
+            PrimitiveCodec elementPrimitive = PrimitiveCodecRegistry.ResolveScalar(elementType, stringEncoding, endianness);
+            if (elementPrimitive != null)
+                return elementPrimitive.HlaName;
+
+            if (elementType.GetCustomAttribute<HLARecordAttribute>() == null)
+            {
+                throw new HlaEncodingException(
+                    $"Cannot map collection '{owner.Name}.{property.Name}': element type '{elementType.Name}' is " +
+                    "neither a supported basic type nor an [HLARecord].");
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -236,30 +298,6 @@ namespace Portico.Hla.Serialization.Metadata
             }
 
             return false;
-        }
-
-        private static void ValidateElement(Type owner, PropertyInfo property, Type elementType, string dataType)
-        {
-            PrimitiveCodec elementPrimitive = PrimitiveCodecRegistry.Find(dataType);
-            if (elementPrimitive != null)
-            {
-                if (elementType != elementPrimitive.ClrType)
-                {
-                    throw new HlaEncodingException(
-                        $"Collection '{owner.Name}.{property.Name}' has elements of {elementType.Name} but " +
-                        $"element datatype '{dataType}' requires {elementPrimitive.ClrType.Name}.");
-                }
-                return;
-            }
-
-            if (elementType.GetCustomAttribute<HLARecordAttribute>() == null)
-            {
-                string hint = string.IsNullOrEmpty(dataType)
-                    ? "no element DataType was given and the element type is not an [HLARecord]"
-                    : $"element DataType '{dataType}' is not a known primitive and the element type is not an [HLARecord]";
-                throw new HlaEncodingException(
-                    $"Cannot map collection '{owner.Name}.{property.Name}': {hint}.");
-            }
         }
 
         private static void RequireDefaultConstructible(Type type)

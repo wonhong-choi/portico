@@ -27,11 +27,11 @@ namespace Portico.Hla.Serialization.Emit
                 new[] { typeof(Type), typeof(HlaReader) }, null);
 
         private static readonly MethodInfo WriteArrayMethod =
-            typeof(SerializerRuntime).GetMethod(nameof(SerializerRuntime.WriteArray),
+            typeof(SerializerRuntime).GetMethod(nameof(SerializerRuntime.WriteArrayMember),
                 BindingFlags.Public | BindingFlags.Static);
 
         private static readonly MethodInfo ReadArrayMethod =
-            typeof(SerializerRuntime).GetMethod(nameof(SerializerRuntime.ReadArray),
+            typeof(SerializerRuntime).GetMethod(nameof(SerializerRuntime.ReadArrayMember),
                 BindingFlags.Public | BindingFlags.Static);
 
         private static readonly MethodInfo GetTypeFromHandle =
@@ -138,7 +138,9 @@ namespace Portico.Hla.Serialization.Emit
 
             if (member.IsArray)
             {
-                // SerializerRuntime.WriteArray( ((Owner)obj).Getter, writer, typeof(Elem), elemDataType )
+                // SerializerRuntime.WriteArrayMember( ((Owner)obj).Getter, writer,
+                //                                     typeof(Elem), elemDataType, kind, size1, size2 )
+                GetArrayShape(member, out int kind, out int size1, out int size2);
                 EmitLdarg(il, objArg);
                 il.Emit(OpCodes.Castclass, ownerType);
                 il.Emit(OpCodes.Callvirt, getter);
@@ -146,6 +148,9 @@ namespace Portico.Hla.Serialization.Emit
                 il.Emit(OpCodes.Ldtoken, member.ElementClrType);
                 il.Emit(OpCodes.Call, GetTypeFromHandle);
                 EmitDataTypeString(il, member.ElementDataType);
+                EmitLdcI4(il, kind);
+                EmitLdcI4(il, size1);
+                EmitLdcI4(il, size2);
                 il.Emit(OpCodes.Call, WriteArrayMethod);
             }
             else if (member.IsPrimitive)
@@ -175,13 +180,19 @@ namespace Portico.Hla.Serialization.Emit
 
             if (member.IsArray)
             {
-                // owner.SetXxx( (PropType) SerializerRuntime.ReadArray(reader, typeof(Elem), elemDataType, isList) )
+                // owner.SetXxx( (PropType) SerializerRuntime.ReadArrayMember(
+                //     reader, typeof(Elem), elemDataType, kind, size1, size2, outerAsList, innerAsList) )
+                GetArrayShape(member, out int kind, out int size1, out int size2);
                 loadOwner();
                 EmitLdarg(il, readerArg);
                 il.Emit(OpCodes.Ldtoken, member.ElementClrType);
                 il.Emit(OpCodes.Call, GetTypeFromHandle);
                 EmitDataTypeString(il, member.ElementDataType);
+                EmitLdcI4(il, kind);
+                EmitLdcI4(il, size1);
+                EmitLdcI4(il, size2);
                 il.Emit(member.IsList ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+                il.Emit(member.InnerIsList ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
                 il.Emit(OpCodes.Call, ReadArrayMethod);
                 il.Emit(OpCodes.Castclass, member.Property.PropertyType);
                 il.Emit(OpCodes.Callvirt, setter);
@@ -213,6 +224,34 @@ namespace Portico.Hla.Serialization.Emit
                 il.Emit(OpCodes.Ldnull);
             else
                 il.Emit(OpCodes.Ldstr, dataType);
+        }
+
+        /// <summary>Map a collection member's Dimensions to the runtime's (kind, size1, size2) triple.</summary>
+        private static void GetArrayShape(MemberBinding member, out int kind, out int size1, out int size2)
+        {
+            if (member.Is2D)
+            {
+                kind = 2;
+                size1 = member.Dimensions[0];
+                size2 = member.Dimensions[1];
+            }
+            else if (member.Dimensions != null && member.Dimensions.Length == 1)
+            {
+                kind = 1;
+                size1 = member.Dimensions[0];
+                size2 = 0;
+            }
+            else
+            {
+                kind = 0;
+                size1 = 0;
+                size2 = 0;
+            }
+        }
+
+        private static void EmitLdcI4(ILGenerator il, int value)
+        {
+            il.Emit(OpCodes.Ldc_I4, value);
         }
 
         private static void EmitLdarg(ILGenerator il, int index)

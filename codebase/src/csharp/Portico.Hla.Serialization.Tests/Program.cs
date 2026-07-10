@@ -20,10 +20,13 @@ namespace Portico.Hla.Serialization.Tests
             ObjectMapRoundTrip();
             NestedRecordAttribute();
             EndiannessDiffers();
+            ClassEndiannessAndOverride();
             PartialUpdateLeavesDefaults();
             AsciiStringGolden();
             UnicodeStringGolden();
             PrimitiveArrayGolden();
+            FixedArrayPadTruncate();
+            TwoDimensionalArray();
             CollectionsRoundTrip();
             PerformanceHotPath();
 
@@ -31,6 +34,7 @@ namespace Portico.Hla.Serialization.Tests
             Console.WriteLine(_failures == 0
                 ? "ALL TESTS PASSED"
                 : $"{_failures} TEST(S) FAILED");
+
             return _failures == 0 ? 0 : 1;
         }
 
@@ -77,7 +81,7 @@ namespace Portico.Hla.Serialization.Tests
                 Pos = new Position { X = 1, Y = 2, Count = 3 }
             };
 
-            IDictionary<string, byte[]> map = HlaSerializer.Serialize(obj);
+            IDictionary<string, byte[]> map = HlaSerializer.ToDictionary(obj);
 
             Assert("map has entry 'aa'", map.ContainsKey("aa"));
             Assert("map has entry 'ab'", map.ContainsKey("ab"));
@@ -89,7 +93,7 @@ namespace Portico.Hla.Serialization.Tests
             Assert("pos is 20 bytes (nested record)", map["pos"].Length == 20);
 
             var readOnly = new Dictionary<string, byte[]>(map);
-            var back = HlaSerializer.Deserialize<SampleObject>(readOnly);
+            var back = HlaSerializer.FromDictionary<SampleObject>(readOnly);
             Assert("object round-trip Aa", back.Aa == obj.Aa);
             Assert("object round-trip Ab", back.Ab == obj.Ab);
             Assert("object round-trip Flag", back.Flag == obj.Flag);
@@ -103,7 +107,7 @@ namespace Portico.Hla.Serialization.Tests
             byte[] standalone = HlaSerializer.SerializeRecord(pos);
 
             var obj = new SampleObject { Pos = pos };
-            IDictionary<string, byte[]> map = HlaSerializer.Serialize(obj);
+            IDictionary<string, byte[]> map = HlaSerializer.ToDictionary(obj);
 
             Assert("nested-record attr bytes == standalone record bytes",
                 BytesEqual(map["pos"], standalone));
@@ -113,7 +117,7 @@ namespace Portico.Hla.Serialization.Tests
         private static void EndiannessDiffers()
         {
             var inter = new SampleInteraction { Xa = 0x0102, Xb = 1.5f };
-            IDictionary<string, byte[]> map = HlaSerializer.Serialize(inter);
+            IDictionary<string, byte[]> map = HlaSerializer.ToDictionary(inter);
 
             // Xa is HLAinteger16BE => big-endian 0x01 0x02
             Assert("int16 BE order", map["xa"].Length == 2 && map["xa"][0] == 0x01 && map["xa"][1] == 0x02);
@@ -123,20 +127,45 @@ namespace Portico.Hla.Serialization.Tests
             WriteInt32LE(leExpected, 0, SingleBits(1.5f));
             Assert("float32 LE bytes match", BytesEqual(map["xb"], leExpected));
 
-            var back = HlaSerializer.Deserialize<SampleInteraction>(new Dictionary<string, byte[]>(map));
+            var back = HlaSerializer.FromDictionary<SampleInteraction>(new Dictionary<string, byte[]>(map));
             Assert("interaction round-trip Xa", back.Xa == inter.Xa);
             Assert("interaction round-trip Xb", back.Xb == inter.Xb);
+        }
+
+        // 5b. Class-level endianness is inherited; a per-property Endianness overrides it.
+        private static void ClassEndiannessAndOverride()
+        {
+            var obj = new SampleEndian { Le = 1.5, Be = 1.5, N = 0x01020304 };
+            IDictionary<string, byte[]> map = HlaSerializer.ToDictionary(obj);
+
+            // Le inherits the class default (Little); Be overrides to Big. Same value => reversed bytes.
+            byte[] le = map["le"];
+            byte[] be = map["be"];
+            bool reversed = le.Length == 8 && be.Length == 8;
+            for (int i = 0; i < 8 && reversed; i++)
+                reversed &= le[i] == be[7 - i];
+            Assert("class Little inherited, member Big override => reversed float64 bytes", reversed);
+
+            // N inherits Little: 0x01020304 => 04 03 02 01
+            byte[] n = map["n"];
+            Assert("inherited little-endian int32 order",
+                n.Length == 4 && n[0] == 0x04 && n[1] == 0x03 && n[2] == 0x02 && n[3] == 0x01);
+
+            var back = HlaSerializer.FromDictionary<SampleEndian>(new Dictionary<string, byte[]>(map));
+            Assert("endian round-trip Le", back.Le == 1.5);
+            Assert("endian round-trip Be", back.Be == 1.5);
+            Assert("endian round-trip N", back.N == 0x01020304);
         }
 
         // 6. A partial map (missing members) leaves those properties at their defaults.
         private static void PartialUpdateLeavesDefaults()
         {
             var partial = new Dictionary<string, byte[]>();
-            IDictionary<string, byte[]> full = HlaSerializer.Serialize(
+            IDictionary<string, byte[]> full = HlaSerializer.ToDictionary(
                 new SampleObject { Aa = 7.0, Ab = 123, Flag = false, Pos = new Position() });
             partial["ab"] = full["ab"]; // only supply 'ab'
 
-            var back = HlaSerializer.Deserialize<SampleObject>(partial);
+            var back = HlaSerializer.FromDictionary<SampleObject>(partial);
             Assert("partial update applies Ab", back.Ab == 123);
             Assert("partial update leaves Aa default", back.Aa == 0.0);
             Assert("partial update leaves Pos null", back.Pos == null);
@@ -146,17 +175,17 @@ namespace Portico.Hla.Serialization.Tests
         private static void AsciiStringGolden()
         {
             var obj = new SampleCollections { Name = "AB" };
-            byte[] name = HlaSerializer.Serialize(obj)["name"];
+            byte[] name = HlaSerializer.ToDictionary(obj)["name"];
 
             byte[] expected = { 0x00, 0x00, 0x00, 0x02, 0x41, 0x42 };
             Assert("ASCII string 'AB' == [len=2][41 42]", BytesEqual(name, expected));
 
-            var back = HlaSerializer.Deserialize<SampleCollections>(
+            var back = HlaSerializer.FromDictionary<SampleCollections>(
                 new Dictionary<string, byte[]> { ["name"] = name });
             Assert("ASCII string round-trip", back.Name == "AB");
 
             // empty string => length 0, no bytes
-            byte[] empty = HlaSerializer.Serialize(new SampleCollections { Name = "" })["name"];
+            byte[] empty = HlaSerializer.ToDictionary(new SampleCollections { Name = "" })["name"];
             Assert("empty ASCII string is 4 bytes", empty.Length == 4);
         }
 
@@ -164,7 +193,7 @@ namespace Portico.Hla.Serialization.Tests
         private static void UnicodeStringGolden()
         {
             var obj = new SampleCollections { Label = "AB" };
-            byte[] label = HlaSerializer.Serialize(obj)["label"];
+            byte[] label = HlaSerializer.ToDictionary(obj)["label"];
 
             byte[] expected =
             {
@@ -175,11 +204,11 @@ namespace Portico.Hla.Serialization.Tests
             };
             Assert("Unicode string 'AB' matches BOM+UTF16BE layout", BytesEqual(label, expected));
 
-            var back = HlaSerializer.Deserialize<SampleCollections>(
+            var back = HlaSerializer.FromDictionary<SampleCollections>(
                 new Dictionary<string, byte[]> { ["label"] = label });
             Assert("Unicode string round-trip", back.Label == "AB");
 
-            byte[] empty = HlaSerializer.Serialize(new SampleCollections { Label = "" })["label"];
+            byte[] empty = HlaSerializer.ToDictionary(new SampleCollections { Label = "" })["label"];
             Assert("empty Unicode string is 6 bytes (len + BOM)", empty.Length == 6);
         }
 
@@ -187,7 +216,7 @@ namespace Portico.Hla.Serialization.Tests
         private static void PrimitiveArrayGolden()
         {
             var obj = new SampleCollections { Samples = new[] { 1.0, 2.0 } };
-            byte[] samples = HlaSerializer.Serialize(obj)["samples"];
+            byte[] samples = HlaSerializer.ToDictionary(obj)["samples"];
 
             byte[] expected = new byte[4 + 16];
             WriteInt32BE(expected, 0, 2);
@@ -195,6 +224,69 @@ namespace Portico.Hla.Serialization.Tests
             WriteDoubleBE(expected, 12, 2.0);
             Assert("double[] {1,2} == [count=2][1.0 BE][2.0 BE] (20 bytes)",
                 samples.Length == 20 && BytesEqual(samples, expected));
+        }
+
+        // 9b. Fixed 1-D array: pad short input with defaults, truncate long input, count prefix = fixed size.
+        private static void FixedArrayPadTruncate()
+        {
+            // 2 elements, fixed size 3 => padded with a trailing 0. Count prefix is 3 (Portico HLAfixedArray).
+            byte[] padded = HlaSerializer.ToDictionary(new SampleArrays { Trio = new List<int> { 10, 20 } })["trio"];
+            byte[] expectedPad = new byte[4 + 12];
+            WriteInt32BE(expectedPad, 0, 3);
+            WriteInt32BE(expectedPad, 4, 10);
+            WriteInt32BE(expectedPad, 8, 20);
+            WriteInt32BE(expectedPad, 12, 0);
+            Assert("fixed[3] of {10,20} => [count=3][10][20][0] (16 bytes)",
+                padded.Length == 16 && BytesEqual(padded, expectedPad));
+
+            // 5 elements, fixed size 3 => truncated to the first 3.
+            byte[] truncated = HlaSerializer.ToDictionary(
+                new SampleArrays { Trio = new List<int> { 1, 2, 3, 4, 5 } })["trio"];
+            byte[] expectedTrunc = new byte[4 + 12];
+            WriteInt32BE(expectedTrunc, 0, 3);
+            WriteInt32BE(expectedTrunc, 4, 1);
+            WriteInt32BE(expectedTrunc, 8, 2);
+            WriteInt32BE(expectedTrunc, 12, 3);
+            Assert("fixed[3] of {1..5} => truncated to [1][2][3]",
+                truncated.Length == 16 && BytesEqual(truncated, expectedTrunc));
+
+            var back = HlaSerializer.FromDictionary<SampleArrays>(
+                new Dictionary<string, byte[]> { ["trio"] = padded });
+            Assert("fixed array decodes to exactly 3 elements", back.Trio != null && back.Trio.Count == 3);
+            Assert("fixed array decoded pad value", back.Trio[2] == 0);
+        }
+
+        // 9c. Fixed 2-D array over List<List<int>>: outer count + per-row count, pad/truncate each level.
+        private static void TwoDimensionalArray()
+        {
+            var grid = new SampleArrays
+            {
+                Grid = new List<List<int>>
+                {
+                    new List<int> { 1 },          // short row => padded to {1, 0}
+                    new List<int> { 3, 4, 5 }     // long row  => truncated to {3, 4}
+                }
+            };
+            byte[] bytes = HlaSerializer.ToDictionary(grid)["grid"];
+
+            // outer count(2) + 2 * ( inner count(2) + 2 ints ) = 4 + 2*(4 + 8) = 28
+            byte[] expected = new byte[4 + 2 * (4 + 8)];
+            int o = 0;
+            WriteInt32BE(expected, o, 2); o += 4;   // outer count
+            WriteInt32BE(expected, o, 2); o += 4;   // row 0 count
+            WriteInt32BE(expected, o, 1); o += 4;
+            WriteInt32BE(expected, o, 0); o += 4;   // padded
+            WriteInt32BE(expected, o, 2); o += 4;   // row 1 count
+            WriteInt32BE(expected, o, 3); o += 4;
+            WriteInt32BE(expected, o, 4); o += 4;   // truncated (5 dropped)
+            Assert("2-D fixed[2,2] pad/truncate golden layout (28 bytes)",
+                bytes.Length == 28 && BytesEqual(bytes, expected));
+
+            var back = HlaSerializer.FromDictionary<SampleArrays>(
+                new Dictionary<string, byte[]> { ["grid"] = bytes });
+            Assert("2-D decodes 2 rows", back.Grid != null && back.Grid.Count == 2);
+            Assert("2-D row 0 padded", back.Grid[0].Count == 2 && back.Grid[0][1] == 0);
+            Assert("2-D row 1 truncated", back.Grid[1].Count == 2 && back.Grid[1][0] == 3 && back.Grid[1][1] == 4);
         }
 
         // 10. Full round-trip across strings, primitive array, int list, and record list.
@@ -213,14 +305,14 @@ namespace Portico.Hla.Serialization.Tests
                 }
             };
 
-            IDictionary<string, byte[]> map = HlaSerializer.Serialize(obj);
+            IDictionary<string, byte[]> map = HlaSerializer.ToDictionary(obj);
 
             // points: 4-byte count + 2 * 20-byte records
             Assert("record list 'points' is 44 bytes", map["points"].Length == 4 + 2 * 20);
             // ids: 4-byte count + 3 * 4-byte ints
             Assert("int list 'ids' is 16 bytes", map["ids"].Length == 4 + 3 * 4);
 
-            var back = HlaSerializer.Deserialize<SampleCollections>(new Dictionary<string, byte[]>(map));
+            var back = HlaSerializer.FromDictionary<SampleCollections>(new Dictionary<string, byte[]>(map));
             Assert("collections round-trip Name", back.Name == "hello");
             Assert("collections round-trip Label", back.Label == "héllo");
             Assert("collections round-trip Samples length", back.Samples != null && back.Samples.Length == 3);

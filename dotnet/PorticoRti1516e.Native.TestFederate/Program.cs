@@ -161,7 +161,7 @@ namespace PorticoRti1516e.Native.TestFederate
                         Ac = i,
                     };
                     var attributeValues = HlaHandleCodec.ToHandleMap(
-                        HlaSerializer.Serialize(entity), attributeHandlesByName);
+                        HlaSerializer.ToDictionary(entity), attributeHandlesByName);
                     rtiAmb.UpdateAttributeValues(objectInstanceHandle, attributeValues, Encoding.ASCII.GetBytes("Hi!"), sendTime);
 
                     Console.WriteLine("[" + (i + 1) + "/" + iterationCount + "] Sending an InteractionRoot.X interaction (timestamped)...");
@@ -171,7 +171,7 @@ namespace PorticoRti1516e.Native.TestFederate
                         Xb = i * 2.0,
                     };
                     var parameterValues = HlaHandleCodec.ToHandleMap(
-                        HlaSerializer.Serialize(interaction), parameterHandlesByName);
+                        HlaSerializer.ToDictionary(interaction), parameterHandlesByName);
                     rtiAmb.SendInteraction(interactionClassHandle, parameterValues, Encoding.ASCII.GetBytes("Hi!"), sendTime);
 
                     federateTime += 1.0; // timestep, matches ExampleCPPFederate::advanceTime's caller

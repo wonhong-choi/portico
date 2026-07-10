@@ -14,13 +14,13 @@ namespace PorticoRti1516e.Federate.Contracts
     [HLAObjectClass(Name = "ObjectRoot.A")]
     public class EntityStateObject
     {
-        [HLAAttribute(Name = "aa", DataType = "HLAASCIIstring")]
+        [HLAAttribute(Name = "aa", StringEncoding = StringEncoding.Ascii)]
         public string Aa { get; set; }
 
-        [HLAAttribute(Name = "ab", DataType = "HLAfloat64BE")]
+        [HLAAttribute(Name = "ab")] // double => HLAfloat64BE (default big-endian)
         public double Ab { get; set; }
 
-        [HLAAttribute(Name = "ac", DataType = "HLAinteger32BE")]
+        [HLAAttribute(Name = "ac")] // int => HLAinteger32BE
         public int Ac { get; set; }
     }
 }

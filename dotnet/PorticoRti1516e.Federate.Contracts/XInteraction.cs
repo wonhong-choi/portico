@@ -9,10 +9,10 @@ namespace PorticoRti1516e.Federate.Contracts
     [HLAInteractionClass(Name = "InteractionRoot.X")]
     public class XInteraction
     {
-        [HLAParameter(Name = "xa", DataType = "HLAASCIIstring")]
+        [HLAParameter(Name = "xa", StringEncoding = StringEncoding.Ascii)]
         public string Xa { get; set; }
 
-        [HLAParameter(Name = "xb", DataType = "HLAfloat64BE")]
+        [HLAParameter(Name = "xb")] // double => HLAfloat64BE (default big-endian)
         public double Xb { get; set; }
     }
 }

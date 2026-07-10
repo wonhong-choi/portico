@@ -10,7 +10,7 @@ namespace PorticoRti1516e.Federate.Contracts
     public static class HlaHandleCodec
     {
         /// <summary>
-        /// Send side: convert { fomName -&gt; bytes } (from HlaSerializer.Serialize) into
+        /// Send side: convert { fomName -&gt; bytes } (from HlaSerializer.ToDictionary) into
         /// { handle -&gt; bytes } for UpdateAttributeValues / SendInteraction. Names with no
         /// resolved handle are skipped.
         /// </summary>
@@ -29,7 +29,7 @@ namespace PorticoRti1516e.Federate.Contracts
 
         /// <summary>
         /// Receive side: convert { handle -&gt; bytes } (from a Reflect/Receive callback) into
-        /// { fomName -&gt; bytes } for HlaSerializer.Deserialize. Handles with no known name fall
+        /// { fomName -&gt; bytes } for HlaSerializer.FromDictionary. Handles with no known name fall
         /// back to their string form so nothing is silently dropped.
         /// </summary>
         public static Dictionary<string, byte[]> ToNameMap<THandle>(
